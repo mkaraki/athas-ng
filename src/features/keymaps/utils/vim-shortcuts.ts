@@ -1,6 +1,6 @@
 type VimKeyboardEvent = Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">;
 
-const VIM_CONTROL_KEYS = new Set(["b", "r", "t", "w"]);
+const VIM_CONTROL_KEYS = new Set(["b", "r", "t", "v", "w"]);
 
 export function isVimOwnedShortcut(event: VimKeyboardEvent): boolean {
   return (

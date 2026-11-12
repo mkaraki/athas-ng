@@ -20,6 +20,7 @@ describe("isVimOwnedShortcut", () => {
     expect(isVimOwnedShortcut(keyboardEvent({ key: "R", ctrlKey: true }))).toBe(true);
     expect(isVimOwnedShortcut(keyboardEvent({ key: "b", ctrlKey: true }))).toBe(true);
     expect(isVimOwnedShortcut(keyboardEvent({ key: "t", ctrlKey: true }))).toBe(true);
+    expect(isVimOwnedShortcut(keyboardEvent({ key: "v", ctrlKey: true }))).toBe(true);
     expect(isVimOwnedShortcut(keyboardEvent({ key: "w", ctrlKey: true }))).toBe(true);
     expect(isVimOwnedShortcut(keyboardEvent({ metaKey: true }))).toBe(false);
     expect(isVimOwnedShortcut(keyboardEvent({ ctrlKey: true, shiftKey: true }))).toBe(false);

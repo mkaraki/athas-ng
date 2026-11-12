@@ -204,4 +204,6 @@ export const commandPaletteOrder: CommandPaletteSlot[] = [
   "vim.enterNormalMode",
   "vim.enterInsertMode",
   "vim.enterVisualMode",
+  "vim.enterVisualLineMode",
+  "vim.enterVisualBlockMode",
 ];

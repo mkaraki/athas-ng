@@ -70,9 +70,13 @@ export function toAthasExInput(name: string, argString?: string): string {
   return `${name} ${args}`;
 }
 
-export function toVimStoreMode(mode: string | undefined): VimMode {
+export function toVimStoreMode(mode: string | undefined, subMode?: string): VimMode {
   if (mode === "insert" || mode === "replace") return "insert";
-  if (mode === "visual") return "visual";
+  if (mode === "visual") {
+    if (subMode === "linewise") return "visual-line";
+    if (subMode === "blockwise") return "visual-block";
+    return "visual";
+  }
   return "normal";
 }
 
@@ -81,7 +85,11 @@ export function getVimMode(view: EditorView): VimMode | null {
   const vimState = getCM(view)?.state.vim;
   if (!vimState) return null;
   if (vimState.insertMode) return "insert";
-  if (vimState.visualMode) return "visual";
+  if (vimState.visualMode) {
+    if (vimState.visualBlock) return "visual-block";
+    if (vimState.visualLine) return "visual-line";
+    return "visual";
+  }
   return "normal";
 }
 
@@ -94,8 +102,8 @@ export function athasVim(onModeChange: (mode: VimMode) => void): Extension {
   const modeListener = ViewPlugin.fromClass(
     class {
       private cm: CodeMirror | null = null;
-      private readonly handleModeChange = (event: { mode?: string }) =>
-        onModeChange(toVimStoreMode(event.mode));
+      private readonly handleModeChange = (event: { mode?: string; subMode?: string }) =>
+        onModeChange(toVimStoreMode(event.mode, event.subMode));
 
       constructor(view: EditorView) {
         this.attach(view);
