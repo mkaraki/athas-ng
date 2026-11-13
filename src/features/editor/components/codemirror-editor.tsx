@@ -7,7 +7,6 @@ import {
   crosshairCursor,
   dropCursor,
   EditorView,
-  highlightActiveLine,
   highlightActiveLineGutter,
   highlightSpecialChars,
   keymap,
@@ -51,6 +50,7 @@ import {
 } from "../engines/codemirror/position";
 import { createCodeMirrorPositionResolver } from "../engines/codemirror/position-resolver";
 import { athasEditorTheme } from "../engines/codemirror/theme";
+import { athasActiveLine } from "../engines/codemirror/active-line";
 import {
   type CodeMirrorViewOptions,
   codeMirrorViewExtensions,
@@ -427,7 +427,7 @@ export function CodeMirrorEditor({
           closeBrackets(),
           rectangularSelection(),
           crosshairCursor(),
-          highlightActiveLine(),
+          athasActiveLine,
           highlightActiveLineGutter(),
           foldGutter({ foldingChanged: lspFoldingChanged }),
           EditorView.clickAddsSelectionRange.of((event) => event.altKey),
