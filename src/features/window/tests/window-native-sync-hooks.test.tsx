@@ -103,7 +103,7 @@ describe("useWindowDocumentState", () => {
 
     const unmount = mount(useWindowDocumentState);
     expect(sync).toHaveBeenLastCalledWith(
-      "main.ts — athas — Athas",
+      "main.ts — athas — Athas-ng",
       "/projects/athas/src/main.ts",
       false,
     );
@@ -112,7 +112,7 @@ describe("useWindowDocumentState", () => {
       (useBufferStore as unknown as AnyStore).setState({ buffers: [editor({ isDirty: true })] }),
     );
     expect(sync).toHaveBeenLastCalledWith(
-      "main.ts — athas — Athas",
+      "main.ts — athas — Athas-ng",
       "/projects/athas/src/main.ts",
       true,
     );
@@ -129,7 +129,7 @@ describe("useWindowDocumentState", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(sync).toHaveBeenCalledWith("Athas", null, false);
+    expect(sync).toHaveBeenCalledWith("Athas-ng", null, false);
     expect(console.error).toHaveBeenCalledWith(
       "Failed to update native window document state:",
       new Error("no window"),

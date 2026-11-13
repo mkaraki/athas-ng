@@ -59,7 +59,7 @@ export default function DetachedResourceWindow() {
   return (
     <AppQueryProvider>
       <DetachedWindowShell
-        title={resource?.name ?? "Athas"}
+        title={resource?.name ?? "Athas-ng"}
         icon={
           resource ? (
             avatarUrl ? (

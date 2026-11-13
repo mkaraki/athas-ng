@@ -174,7 +174,7 @@ export const GeneralSettings = () => {
     }
   };
 
-  const versionLabel = `Athas ${appVersion || "..."}`;
+  const versionLabel = `Athas-ng ${appVersion || "..."}`;
   const updateStatus = downloading
     ? `${versionLabel} · Downloading ${downloadProgress?.percentage ?? 0}%`
     : installing

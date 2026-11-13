@@ -53,7 +53,7 @@ export function DetachedWindowShell({
   useSystemAccessibility();
 
   useEffect(() => {
-    void getCurrentWindow().setTitle(`${title} — Athas`).catch(console.error);
+    void getCurrentWindow().setTitle(`${title} — Athas-ng`).catch(console.error);
   }, [title]);
 
   return (
