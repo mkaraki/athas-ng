@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { EditorState } from "@codemirror/state";
+import { EditorSelection, EditorState, StateEffect } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { getCM, Vim, vim } from "@replit/codemirror-vim";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -72,7 +73,10 @@ function mount(host: Partial<CodeMirrorHost> = {}) {
   shell.append(editorParent);
   view = new EditorView({
     parent: editorParent,
-    state: EditorState.create({ doc: "const a = 1;\r\nconst b = 2;" }),
+    state: EditorState.create({
+      doc: "const a = 1;\r\nconst b = 2;",
+      extensions: [EditorState.allowMultipleSelections.of(true)],
+    }),
   });
   vi.spyOn(view, "coordsAtPos").mockImplementation((position: number) => ({
     left: 100 + position * 8,
@@ -139,6 +143,87 @@ describe("CodeMirror selection agent action", () => {
       }),
     ]);
     expect(action()).toBeNull();
+  });
+
+  it.each([
+    { mainIndex: 0, backward: false },
+    { mainIndex: 1, backward: false },
+    { mainIndex: 0, backward: true },
+    { mainIndex: 1, backward: true },
+  ])(
+    "anchors block selections on the first row ($mainIndex, $backward)",
+    ({ mainIndex, backward }) => {
+      mount();
+      const range = (from: number, to: number) =>
+        backward ? EditorSelection.range(to, from) : EditorSelection.range(from, to);
+      act(() =>
+        view.dispatch({
+          selection: EditorSelection.create([range(6, 7), range(19, 20)], mainIndex),
+        }),
+      );
+
+      expect(mocks.anchorRects[mocks.anchorRects.length - 1]).toEqual({
+        x: 148,
+        y: 60,
+        width: 8,
+        height: 16,
+      });
+
+      act(() =>
+        view.dispatch({
+          selection: EditorSelection.create([range(6, 8), range(19, 21)], mainIndex),
+        }),
+      );
+      expect(mocks.anchorRects[mocks.anchorRects.length - 1]).toEqual({
+        x: 148,
+        y: 60,
+        width: 16,
+        height: 16,
+      });
+    },
+  );
+
+  it("keeps the menu on the first row when a block grows downward", () => {
+    mount();
+    act(() => view.dispatch({ selection: { anchor: 6, head: 7 } }));
+    const firstAnchor = mocks.anchorRects[mocks.anchorRects.length - 1];
+
+    act(() =>
+      view.dispatch({
+        selection: EditorSelection.create(
+          [EditorSelection.range(6, 7), EditorSelection.range(19, 20)],
+          1,
+        ),
+      }),
+    );
+    expect(view.state.selection.main.from).toBe(19);
+    expect(mocks.anchorRects[mocks.anchorRects.length - 1]).toEqual(firstAnchor);
+  });
+
+  it("anchors a Vim Visual Block selection above its first row", () => {
+    mount();
+    act(() =>
+      view.dispatch({
+        effects: StateEffect.appendConfig.of(vim()),
+        selection: { anchor: 6 },
+      }),
+    );
+    const cm = getCM(view)!;
+    act(() => {
+      Vim.handleKey(cm, "<C-v>", "user");
+      Vim.handleKey(cm, "j", "user");
+    });
+    expect(view.state.selection.ranges.map(({ from, to }) => [from, to])).toEqual([
+      [6, 7],
+      [19, 20],
+    ]);
+    expect(view.state.selection.main.from).toBe(19);
+    expect(mocks.anchorRects[mocks.anchorRects.length - 1]).toEqual({
+      x: 148,
+      y: 60,
+      width: 8,
+      height: 16,
+    });
   });
 
   it("opens inline edit on the selection from the Edit action", () => {

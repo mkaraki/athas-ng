@@ -77,8 +77,10 @@ export function CodeMirrorSelectionAgentAction({ host }: { host: CodeMirrorHost 
       return;
     }
 
-    const start = view.coordsAtPos(main.from, 1);
-    const end = view.coordsAtPos(main.to, -1);
+    // Block selections have a range per row; the primary range follows the cursor.
+    const first = state.selection.ranges[0];
+    const start = view.coordsAtPos(first.from, 1);
+    const end = view.coordsAtPos(first.to, -1);
     const visible = start ?? end;
     if (!visible) {
       clearAction();
@@ -86,7 +88,7 @@ export function CodeMirrorSelectionAgentAction({ host }: { host: CodeMirrorHost 
     }
 
     const isSingleVisibleLine =
-      state.doc.lineAt(main.from).number === state.doc.lineAt(main.to).number && start && end;
+      state.doc.lineAt(first.from).number === state.doc.lineAt(first.to).number && start && end;
     const left = isSingleVisibleLine ? Math.min(start.left, end.left) : visible.left;
     const width = isSingleVisibleLine ? Math.max(Math.abs(end.left - start.left), 1) : 1;
     const anchorRect = {
