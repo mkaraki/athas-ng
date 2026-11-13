@@ -1,5 +1,5 @@
-import { EditorState, Prec, type Extension } from "@codemirror/state";
-import { drawSelection, EditorView, ViewPlugin } from "@codemirror/view";
+import { Prec, type Extension } from "@codemirror/state";
+import { type EditorView, ViewPlugin } from "@codemirror/view";
 import { CodeMirror, getCM, Vim, vim } from "@replit/codemirror-vim";
 import type { VimMode } from "@/features/vim/stores/vim.store";
 
@@ -102,13 +102,10 @@ export function athasVim(onModeChange: (mode: VimMode) => void): Extension {
   const modeListener = ViewPlugin.fromClass(
     class {
       private cm: CodeMirror | null = null;
-      private readonly handleModeChange = (event: { mode?: string; subMode?: string }) => {
-        const mode = toVimStoreMode(event.mode, event.subMode);
-        this.view.scrollDOM.classList.toggle("cm-athas-visual-block", mode === "visual-block");
-        onModeChange(mode);
-      };
+      private readonly handleModeChange = (event: { mode?: string; subMode?: string }) =>
+        onModeChange(toVimStoreMode(event.mode, event.subMode));
 
-      constructor(private readonly view: EditorView) {
+      constructor(view: EditorView) {
         this.attach(view);
       }
 
@@ -124,25 +121,9 @@ export function athasVim(onModeChange: (mode: VimMode) => void): Extension {
       destroy() {
         this.cm?.off("vim-mode-change", this.handleModeChange);
         this.cm = null;
-        this.view.scrollDOM.classList.remove("cm-athas-visual-block");
       }
     },
   );
 
-  const visualEscape = EditorView.domEventHandlers({
-    keydown(event, view) {
-      if (event.key !== "Escape" || event.isComposing) return false;
-      const cm = getCM(view);
-      if (!cm?.state.vim?.visualMode) return false;
-      // Exit Vim's visual selection as a unit rather than leaving a cursor in each range.
-      return Vim.handleKey(cm, "<Esc>", "user") === true;
-    },
-  });
-
-  return [
-    Prec.highest([visualEscape, vim()]),
-    EditorState.allowMultipleSelections.of(true),
-    drawSelection(),
-    modeListener,
-  ];
+  return [Prec.highest(vim()), modeListener];
 }
