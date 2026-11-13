@@ -118,7 +118,7 @@ describe("general settings", () => {
     mocks.check.mockResolvedValue({ available: false, currentVersion: "1.4.0" });
     await render();
 
-    expect(rowDescription("Version")).toBe("Athas 1.4.0 · Up to date");
+    expect(rowDescription("Version")).toBe("Athas-ng 1.4.0 · Up to date");
     await click(button("Check for updates"));
 
     expect(mocks.toasts).toContainEqual({
@@ -138,7 +138,7 @@ describe("general settings", () => {
     await render();
 
     await click(button("Check for updates"));
-    expect(rowDescription("Version")).toBe("Athas 1.4.0 · 2.0.0 available");
+    expect(rowDescription("Version")).toBe("Athas-ng 1.4.0 · 2.0.0 available");
     expect(button("Install 2.0.0")).toBeTruthy();
     expect(mocks.toasts).toEqual([]);
   });
@@ -150,7 +150,7 @@ describe("general settings", () => {
 
     await click(button("Check for updates"));
 
-    expect(rowDescription("Version")).toBe("Athas 1.4.0 · Update check failed");
+    expect(rowDescription("Version")).toBe("Athas-ng 1.4.0 · Update check failed");
     expect(body().getByText("network unreachable")).toBeTruthy();
   });
 

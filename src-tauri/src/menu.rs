@@ -244,8 +244,8 @@ fn build_app_submenu<R: tauri::Runtime>(
       ..Default::default()
    };
 
-   SubmenuBuilder::new(app, "Athas")
-      .about_with_text("About Athas", Some(about_metadata))
+   SubmenuBuilder::new(app, "Athas-ng")
+      .about_with_text("About Athas-ng", Some(about_metadata))
       .separator()
       .item(&MenuItem::with_id(
          app,
@@ -264,14 +264,14 @@ fn build_app_submenu<R: tauri::Runtime>(
       .separator()
       .services()
       .separator()
-      .hide_with_text("Hide Athas")
+      .hide_with_text("Hide Athas-ng")
       .hide_others()
       .show_all()
       .separator()
       .item(&MenuItem::with_id(
          app,
          "quit_app",
-         "Quit Athas",
+         "Quit Athas-ng",
          true,
          Some("Cmd+Q"),
       )?)

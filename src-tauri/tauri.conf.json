@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Athas",
+  "productName": "Athas-ng",
   "version": "0.18.0-beta.2",
   "identifier": "com.code.athas",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Athas",
+        "title": "Athas-ng",
         "width": 1200,
         "height": 800,
         "decorations": true,
