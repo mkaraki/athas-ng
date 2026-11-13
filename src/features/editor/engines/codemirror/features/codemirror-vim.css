@@ -9,6 +9,12 @@
   outline: 1px solid var(--cursor, var(--foreground));
 }
 
+.cm-editor.cm-focused .cm-athas-visual-block .cm-fat-cursor {
+  background: transparent;
+  color: var(--foreground) !important;
+  outline: 1px solid var(--cursor, var(--foreground));
+}
+
 .cm-editor .cm-panels.cm-panels-bottom:has(> .cm-vim-panel) {
   position: absolute;
   top: auto;

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { EditorState, type Extension } from "@codemirror/state";
+import { EditorSelection, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { getCM, Vim } from "@replit/codemirror-vim";
 import { act } from "react";
@@ -58,9 +58,9 @@ function cm(view: EditorView) {
   return instance;
 }
 
-function pressKey(view: EditorView, key: string) {
+function pressKey(view: EditorView, key: string, modifiers: KeyboardEventInit = {}) {
   view.contentDOM.dispatchEvent(
-    new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+    new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...modifiers }),
   );
 }
 
@@ -224,6 +224,24 @@ describe("CodeMirrorVim", () => {
     expect(applyHistory).toHaveBeenCalledWith("undo");
   });
 
+  it.each([
+    ["v", {}],
+    ["V", { shiftKey: true }],
+    ["v", { ctrlKey: true }],
+  ] as const)("returns to normal when Escape follows %s", (key, modifiers) => {
+    const view = createView("abc\ndef", EditorState.allowMultipleSelections.of(true));
+    act(() => root.render(<CodeMirrorVim host={host(view)} />));
+
+    pressKey(view, key, modifiers);
+    expect(cm(view).state.vim?.visualMode).toBe(true);
+    expect(view.state.selection.main.empty).toBe(false);
+
+    pressKey(view, "Escape");
+    expect(cm(view).state.vim?.visualMode).toBe(false);
+    expect(view.state.selection.main.empty).toBe(true);
+    expect(useVimStore.getState().mode).toBe("normal");
+  });
+
   it("stays off for read-only editors and when the setting is off", () => {
     const readOnlyView = createView("hello");
     act(() => root.render(<CodeMirrorVim host={host(readOnlyView, { isReadOnly: true })} />));
@@ -233,5 +251,46 @@ describe("CodeMirrorVim", () => {
     const view = createView("hello");
     act(() => root.render(<CodeMirrorVim host={host(view)} />));
     expect(getCM(view)).toBeNull();
+  });
+
+  it.each(["visual", "visual-line"] as const)(
+    "leaves %s mode and collapses multiple ranges with one Escape",
+    (mode) => {
+      const view = createView("abc\ndef");
+      act(() => root.render(<CodeMirrorVim host={host(view)} />));
+      act(() => useVimStore.getState().actions.setMode(mode));
+      view.dispatch({
+        selection: EditorSelection.create([
+          EditorSelection.range(0, 2),
+          EditorSelection.range(4, 6),
+        ]),
+      });
+      expect(useVimStore.getState().mode).toBe(mode);
+
+      pressKey(view, "Escape");
+
+      expect(cm(view).state.vim?.visualMode).toBe(false);
+      expect(view.state.selection.ranges).toHaveLength(1);
+      expect(view.state.selection.main.empty).toBe(true);
+      expect(useVimStore.getState().mode).toBe("normal");
+    },
+  );
+
+  it("keeps a rectangular range on each line and draws the selection layer", () => {
+    const view = createView("abc\ndef\nghi");
+    act(() => root.render(<CodeMirrorVim host={host(view)} />));
+
+    pressKey(view, "v", { ctrlKey: true });
+    pressKey(view, "G", { shiftKey: true });
+
+    expect(view.state.selection.ranges.map(({ from, to }) => [from, to])).toEqual([
+      [0, 1],
+      [4, 5],
+      [8, 9],
+    ]);
+    expect(view.scrollDOM.querySelector(".cm-selectionLayer")).not.toBeNull();
+    pressKey(view, "Escape");
+    expect(view.state.selection.ranges).toHaveLength(1);
+    expect(view.state.selection.main.empty).toBe(true);
   });
 });
