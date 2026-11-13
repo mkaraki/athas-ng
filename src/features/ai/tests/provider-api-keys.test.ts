@@ -99,25 +99,13 @@ describe("provider API token storage", () => {
 
   it("validates keys with the provider and rejects unknown providers", async () => {
     http.fetch.mockResolvedValueOnce(json({ data: [] }));
-    expect(await validateProviderApiKey("openai", "sk-ok")).toBe(true);
+    expect(await validateProviderApiKey("openai", "sk-ok")).toBe(false);
+    expect(http.fetch).not.toHaveBeenCalled();
     expect(await validateProviderApiKey("not-a-provider", "x")).toBe(false);
   });
 });
 
 describe("provider API key actions", () => {
-  it("stores a validated key and marks the default provider usable", async () => {
-    http.fetch.mockResolvedValueOnce(json({ data: [] }));
-    actions().setDynamicModels("openai", [{ id: "stale", name: "Stale" }]);
-
-    expect(await actions().saveApiKey("openai", "sk-valid")).toBe(true);
-
-    expect(vault.get("openai")).toBe("sk-valid");
-    expect(useAIChatStore.getState().providerApiKeys.get("openai")).toBe(true);
-    expect(useAIChatStore.getState().hasApiKey).toBe(true);
-    expect(useAIChatStore.getState().dynamicModels.openai).toBeUndefined();
-    expect(actions().hasProviderApiKey("openai")).toBe(true);
-  });
-
   it("does not store a key the provider rejects", async () => {
     http.fetch.mockResolvedValueOnce(json({ error: "invalid" }, 401));
 
@@ -135,43 +123,9 @@ describe("provider API key actions", () => {
     expect(actions().hasProviderApiKey("openai")).toBe(false);
   });
 
-  it("removes a key and revokes access", async () => {
-    vault.set("openai", "sk");
-    await actions().checkApiKey("openai");
-    expect(actions().hasProviderApiKey("openai")).toBe(true);
-
-    await actions().removeApiKey("openai");
-
-    expect(vault.has("openai")).toBe(false);
-    expect(actions().hasProviderApiKey("openai")).toBe(false);
-    expect(useAIChatStore.getState().hasApiKey).toBe(false);
-  });
-
   it("propagates removal failures", async () => {
     vi.mocked(commands.removeAiProviderToken).mockRejectedValueOnce(new Error("keychain"));
     await expect(actions().removeApiKey("openai")).rejects.toThrow("keychain");
-  });
-
-  it("shares one lookup between concurrent checks", async () => {
-    vault.set("mistral", "m");
-    await Promise.all([actions().checkApiKey("mistral"), actions().checkApiKey("mistral")]);
-    expect(commands.getAiProviderToken).toHaveBeenCalledTimes(1);
-    expect(actions().hasProviderApiKey("mistral")).toBe(true);
-  });
-
-  it("ignores a check that finishes after the key was replaced", async () => {
-    let release: (value: string | null) => void = () => {};
-    vi.mocked(commands.getAiProviderToken).mockImplementationOnce(
-      () => new Promise((resolve) => (release = resolve)),
-    );
-    const staleCheck = actions().checkApiKey("openai");
-
-    http.fetch.mockResolvedValueOnce(json({ data: [] }));
-    await actions().saveApiKey("openai", "sk-new");
-    release(null);
-    await staleCheck;
-
-    expect(actions().hasProviderApiKey("openai")).toBe(true);
   });
 
   it("treats key lookup failures as no key", async () => {
@@ -180,17 +134,17 @@ describe("provider API key actions", () => {
     expect(useAIChatStore.getState().providerApiKeys.get("openai")).toBe(false);
   });
 
-  it("allows keyless providers and gates Athas on sign-in", async () => {
+  it("allows local Ollama without enabling removed providers", async () => {
     await actions().checkAllProviderApiKeys();
     const state = useAIChatStore.getState();
     expect(state.providerApiKeys.get("ollama")).toBe(true);
-    expect(state.providerApiKeys.get("athas")).toBe(false);
-    expect(state.providerApiKeys.get("anthropic")).toBe(false);
+    expect(state.providerApiKeys.has("athas")).toBe(false);
+    expect(state.providerApiKeys.has("anthropic")).toBe(false);
     expect(actions().hasProviderApiKey("ollama")).toBe(true);
     expect(actions().hasProviderApiKey("unknown")).toBe(false);
 
     useAuthStore.setState({ subscription: { status: "free" } as never });
     await actions().checkApiKey("athas");
-    expect(actions().hasProviderApiKey("athas")).toBe(true);
+    expect(actions().hasProviderApiKey("athas")).toBe(false);
   });
 });

@@ -13,16 +13,10 @@ function syncOllamaBaseUrl(baseUrl: string) {
   });
 }
 
-function syncCustomProviderBaseUrl(baseUrl: string) {
-  void loadProviderRegistry().then(({ setCustomProviderBaseUrl }) => {
-    setCustomProviderBaseUrl(baseUrl);
-  });
-}
-
 /**
  * Pushes the Ollama API key (stored in Tauri's secure storage) into the
  * singleton provider instance so `getModels`, connection checks, and other
- * non-streaming calls can authenticate with Ollama Cloud.
+ * non-streaming calls can authenticate with a local server.
  */
 async function syncOllamaApiKey() {
   const [{ setOllamaApiKey }, { getProviderApiToken }] = await Promise.all([
@@ -36,12 +30,10 @@ async function syncOllamaApiKey() {
 const aiProviderSettingsEffect = {
   applyAll: (settings: { ollamaBaseUrl: string; aiCustomBaseUrl: string }) => {
     syncOllamaBaseUrl(settings.ollamaBaseUrl);
-    syncCustomProviderBaseUrl(settings.aiCustomBaseUrl);
     void syncOllamaApiKey();
   },
   applyChange: (key: string, value: unknown) => {
     if (key === "ollamaBaseUrl") syncOllamaBaseUrl(value as string);
-    if (key === "aiCustomBaseUrl") syncCustomProviderBaseUrl(value as string);
   },
 };
 

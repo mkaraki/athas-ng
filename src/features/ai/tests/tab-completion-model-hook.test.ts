@@ -55,7 +55,7 @@ function settings(patch: Partial<typeof initialSettings>) {
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   useAuthStore.setState({ user: null, isAuthenticated: false, subscription: null });
-  settings({ aiProviderId: "anthropic", aiModelId: "claude-sonnet-5", aiCompletion: true });
+  settings({ aiProviderId: "ollama", aiModelId: "qwen2.5-coder", aiCompletion: true });
   preferences();
   root = createRoot(document.createElement("div"));
 });
@@ -65,7 +65,7 @@ afterEach(async () => {
 });
 
 describe("useTabCompletionModel", () => {
-  it("uses Athas Tab on Automatic for accounts with Intelligence", async () => {
+  it("uses local Ollama regardless of stale account state", async () => {
     useAuthStore.setState({
       isAuthenticated: true,
       subscription: { capabilities: { intelligence: true } } as never,
@@ -73,20 +73,20 @@ describe("useTabCompletionModel", () => {
     await render();
     expect(tab).toMatchObject({
       isAutomatic: true,
-      shortName: "Athas Tab",
-      description: "Automatic: Athas Tab, included in Pro",
+      shortName: "qwen2.5-coder",
+      description: "Automatic: qwen2.5-coder, runs locally",
       allowed: true,
       enabled: true,
     });
   });
 
-  it("falls back to the default model on the user's own key", async () => {
+  it("uses the local default model", async () => {
     await render();
-    expect(tab.resolved).toEqual({ providerId: "anthropic", modelId: "claude-sonnet-5" });
-    expect(tab.description).toBe(`Automatic: ${tab.shortName} on your ${tab.providerName} key`);
+    expect(tab.resolved).toEqual({ providerId: "ollama", modelId: "qwen2.5-coder" });
+    expect(tab.description).toBe(`Automatic: ${tab.shortName}, runs locally`);
   });
 
-  it("keeps Tab local and warns when an explicit choice leaves the network", async () => {
+  it("keeps Tab local when an old choice names a cloud provider", async () => {
     settings({
       aiProviderId: "ollama",
       aiModelId: "qwen2.5-coder",
@@ -100,9 +100,9 @@ describe("useTabCompletionModel", () => {
 
     preferences({ tasks: { autocomplete: { providerId: "openai", modelId: "gpt-5.6-luna" } } });
     await render();
-    expect(tab.isAutomatic).toBe(false);
-    expect(tab.choice).toEqual({ providerId: "openai", modelId: "gpt-5.6-luna" });
-    expect(tab.description).toMatch(/on your OpenAI key, sends code off your network$/);
+    expect(tab.isAutomatic).toBe(true);
+    expect(tab.choice).toBeNull();
+    expect(tab.description).toBe("Automatic: qwen2.5-coder, runs locally");
   });
 
   it("explains why nothing can run", async () => {
@@ -110,25 +110,25 @@ describe("useTabCompletionModel", () => {
     await render();
     expect(tab.resolved).toBeNull();
     expect(tab.shortName).toBe("Choose a model");
-    expect(tab.description).toBe("Sign in for Athas Tab, or choose your own model");
+    expect(tab.description).toBe("Choose a local Ollama model");
 
     useAuthStore.setState({ isAuthenticated: true });
     await render();
-    expect(tab.description).toBe("Athas Tab needs Pro, or choose your own model");
+    expect(tab.description).toBe("Choose a local Ollama model");
 
     settings({ aiProviderId: "ollama", aiModelId: "", ollamaBaseUrl: "http://localhost:11434" });
     await render();
-    expect(tab.description).toBe("Choose a local model; Automatic never uses Athas here");
+    expect(tab.description).toBe("Choose a local Ollama model");
   });
 
-  it("follows the organization policy", async () => {
+  it("ignores obsolete account policy", async () => {
     useAuthStore.setState({
       subscription: {
         enterprise: { policy: { managedMode: true, aiCompletionEnabled: false } },
       } as never,
     });
     await render();
-    expect(tab.allowed).toBe(false);
+    expect(tab.allowed).toBe(true);
   });
 
   it("stores a choice and saves it to the active scope", async () => {
@@ -138,10 +138,10 @@ describe("useTabCompletionModel", () => {
     });
     await render();
 
-    await act(async () => tab.change({ providerId: "mistral", modelId: "codestral-latest" }));
+    await act(async () => tab.change({ providerId: "ollama", modelId: "qwen2.5-coder" }));
     expect(useIntelligenceSettingsStore.getState().preferences.tasks.autocomplete).toEqual({
-      providerId: "mistral",
-      modelId: "codestral-latest",
+      providerId: "ollama",
+      modelId: "qwen2.5-coder",
     });
     expect(save).toHaveBeenCalled();
 

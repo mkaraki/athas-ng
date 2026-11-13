@@ -1,6 +1,5 @@
 import { type ReactNode, Suspense, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { AgentsPlanFooter } from "@/features/ai/components/sidebar/agents-plan-footer";
 import { openCustomize } from "@/features/ai/customize/services/open-customize";
 import {
   startAgentInProject,
@@ -139,7 +138,6 @@ function SidebarBottom() {
             ) : (
               <AccountMenu />
             )}
-            {aiEnabled ? <AgentsPlanFooter /> : null}
             <div className="ml-auto flex items-center gap-chrome-tight">
               <AppUpdateControl />
               <DiagnosticsActivityControl />

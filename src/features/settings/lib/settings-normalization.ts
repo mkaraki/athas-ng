@@ -405,8 +405,8 @@ function normalizeAISettings(settings: Settings): Settings {
   normalizedSettings.ollamaBaseUrl = normalizeOllamaBaseUrl(normalizedSettings.ollamaBaseUrl);
 
   if (!provider) {
-    normalizedSettings.aiProviderId = requestedProviderId || DEFAULT_AI_PROVIDER_ID;
-    normalizedSettings.aiModelId = normalizedSettings.aiModelId?.trim() || DEFAULT_AI_MODEL_ID;
+    normalizedSettings.aiProviderId = DEFAULT_AI_PROVIDER_ID;
+    normalizedSettings.aiModelId = DEFAULT_AI_MODEL_ID;
   } else {
     normalizedSettings.aiProviderId = provider.id;
     normalizedSettings.aiModelId =

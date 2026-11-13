@@ -23,8 +23,7 @@ export const AI_FEATURE_MODEL_OVERRIDES: ReadonlyArray<{ task: IntelligenceTask;
 
 /**
  * The model the default actually resolves to. The stored default may be the "auto" placeholder,
- * which means the device's own provider when it is local, Athas on Pro, and the device's own
- * provider otherwise; Settings shows what will run instead of that placeholder.
+ * which means the device's local Ollama model; Settings shows what will run instead of that placeholder.
  */
 export function getEffectiveDefaultConnection(params: {
   preferences: IntelligencePreferences;
@@ -41,13 +40,9 @@ export function getEffectiveDefaultConnection(params: {
   });
 }
 
-/** Whether a connection can run for this account: Athas models need a plan that includes them. */
-export function isConnectionAvailable(
-  connection: IntelligenceConnection,
-  hasIntelligence: boolean,
-): boolean {
-  if (connection.providerId === "auto") return false;
-  return connection.providerId !== "athas" || hasIntelligence;
+/** Only a configured local Ollama connection is available. */
+export function isConnectionAvailable(connection: IntelligenceConnection): boolean {
+  return connection.providerId === "ollama" && Boolean(connection.modelId.trim());
 }
 
 export function withDefaultConnection(

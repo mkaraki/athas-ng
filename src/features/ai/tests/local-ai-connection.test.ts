@@ -51,10 +51,10 @@ describe("Local AI connections", () => {
     expect(isLocalAiProvider("openai", settings)).toBe(false);
   });
 
-  it("treats a custom endpoint as local only when its host is", () => {
+  it("does not treat the removed custom provider as available", () => {
     expect(
       isLocalAiProvider("custom", { ...settings, aiCustomBaseUrl: "http://localhost:1234/v1" }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       isLocalAiProvider("custom", { ...settings, aiCustomBaseUrl: "https://api.together.xyz/v1" }),
     ).toBe(false);
@@ -104,7 +104,7 @@ describe("Tab completion connection", () => {
   const ollama = { providerId: "ollama", modelId: "qwen3-coder" };
   const isLocalProvider = (providerId: string) => providerId === "ollama";
 
-  it("uses the Athas Tab model on Automatic instead of following the default model", () => {
+  it("does not resolve old cloud defaults to a hosted model", () => {
     const preferences = defaultIntelligencePreferences();
     preferences.defaultConnection = openai;
     expect(
@@ -114,7 +114,7 @@ describe("Tab completion connection", () => {
         personalConnection: openai,
         isLocalProvider,
       }),
-    ).toEqual({ providerId: "athas", modelId: "auto" });
+    ).toBeNull();
   });
 
   it("stays off Athas when the default model is local", () => {
@@ -154,7 +154,7 @@ describe("Tab completion connection", () => {
     ).toEqual(ollama);
   });
 
-  it("falls back to the user's own-key default without Athas access", () => {
+  it("rejects an old cloud personal default", () => {
     expect(
       resolveAutocompleteConnection({
         preferences: defaultIntelligencePreferences(),
@@ -162,7 +162,7 @@ describe("Tab completion connection", () => {
         personalConnection: openai,
         isLocalProvider,
       }),
-    ).toEqual(openai);
+    ).toBeNull();
   });
 
   it("needs a choice when Automatic has nothing to run on", () => {
@@ -176,7 +176,7 @@ describe("Tab completion connection", () => {
     ).toBeNull();
   });
 
-  it("honors an explicit Tab model, even a hosted one next to a local default", () => {
+  it("falls back to the local default for obsolete Tab choices", () => {
     const preferences = defaultIntelligencePreferences();
     preferences.defaultConnection = ollama;
     preferences.tasks.autocomplete = openai;
@@ -187,7 +187,7 @@ describe("Tab completion connection", () => {
         personalConnection: ollama,
         isLocalProvider,
       }),
-    ).toEqual(openai);
+    ).toEqual(ollama);
 
     preferences.tasks.autocomplete = { providerId: "athas", modelId: "" };
     expect(
@@ -197,6 +197,6 @@ describe("Tab completion connection", () => {
         personalConnection: ollama,
         isLocalProvider,
       }),
-    ).toEqual({ providerId: "athas", modelId: "auto" });
+    ).toEqual(ollama);
   });
 });

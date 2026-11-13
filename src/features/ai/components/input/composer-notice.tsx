@@ -1,20 +1,12 @@
-import { openExternalUrl } from "@/utils/external-url";
 import { useState } from "react";
-import { getServiceUrls } from "@/config/services";
-import { ProviderApiKeyCommand } from "@/features/ai/components/provider-api-key-command";
 import { useOnlineStatus } from "@/features/ai/hooks/use-online-status";
 import { resolveComposerNotice } from "@/features/ai/lib/composer-notice";
-import { getHostedUsageState } from "@/features/ai/services/hosted-usage";
-import { useAIChatStore } from "@/features/ai/stores/ai-chat.store";
 import type {
   ComposerNoticeAction,
   ComposerNoticeActionId,
   ComposerNoticeIcon,
 } from "@/features/ai/types/composer-notice.types";
 import { getProviderById } from "@/features/ai/types/providers.types";
-import { useDesktopSignIn } from "@/features/auth/hooks/use-desktop-sign-in";
-import { useSubscriptionRefresh } from "@/features/auth/hooks/use-subscription-refresh";
-import { useAuthStore } from "@/features/auth/stores/auth.store";
 import { useUIState } from "@/features/layout/stores/ui-state.store";
 import { Alert, AlertActions, AlertDescription, AlertTitle } from "@/ui/alert";
 import { Button } from "@/ui/button";
@@ -62,77 +54,31 @@ export function ComposerNotice({
   onRetryLastTurn,
 }: ComposerNoticeProps) {
   const hosted = builtInAgent && providerId === "athas";
-  useSubscriptionRefresh();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const isLoading = useAuthStore((state) => state.isLoading);
-  const hasSubscription = useAuthStore((state) => state.subscription !== null);
-  const authError = useAuthStore((state) => state.error);
-  const sessionCheck = useAuthStore((state) => state.sessionCheck);
-  const credits = useAuthStore((state) => state.subscription?.intelligence?.credits ?? null);
-  const checkApiKey = useAIChatStore((state) => state.actions.checkApiKey);
-  const signIn = useDesktopSignIn();
   const online = useOnlineStatus();
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(() => new Set());
-  const [actionPending, setActionPending] = useState(false);
-  const [keyManagerOpen, setKeyManagerOpen] = useState(false);
 
   const notice = resolveComposerNotice({
     hosted,
     providerBlocked: builtInAgent && providerBlocked,
     providerName: getProviderById(providerId)?.name ?? providerId,
-    auth: { isAuthenticated, isLoading, hasSubscription, error: authError, sessionCheck },
-    signIn: { active: signIn.isSigningIn, error: signIn.error },
-    actionPending,
-    usage: hosted ? getHostedUsageState(credits) : null,
-    online,
+    auth: {
+      isAuthenticated: false,
+      isLoading: false,
+      hasSubscription: false,
+      error: null,
+      sessionCheck: null,
+    },
+    signIn: { active: false, error: null },
+    actionPending: false,
+    usage: null,
+    online: builtInAgent && providerId === "ollama" ? true : online,
     lastTurnOffline: lastTurnFailedOffline,
     dismissed,
   });
 
-  const runAction = async (id: ComposerNoticeActionId) => {
-    switch (id) {
-      case "sign-in":
-        try {
-          await signIn.signIn();
-          await checkApiKey(providerId);
-        } catch {
-          // The sign-in store keeps the reason, and the notice shows it.
-        }
-        return;
-      case "reopen-sign-in":
-        await signIn.reopen();
-        return;
-      case "cancel-sign-in":
-        signIn.cancel();
-        return;
-      case "retry-session":
-        await useAuthStore.getState().actions.retrySessionCheck();
-        await checkApiKey(providerId);
-        return;
-      case "retry-account":
-        setActionPending(true);
-        try {
-          if (await useAuthStore.getState().actions.refreshSubscription())
-            await checkApiKey(providerId);
-        } finally {
-          setActionPending(false);
-        }
-        return;
-      case "add-api-key":
-        setKeyManagerOpen(true);
-        return;
-      case "configure-models":
-        useUIState.getState().openSettings("ai");
-        return;
-      case "open-billing":
-        await openExternalUrl(getServiceUrls().dashboardBillingUrl).catch((error: unknown) =>
-          console.error("Failed to open billing:", error),
-        );
-        return;
-      case "retry-turn":
-        onRetryLastTurn?.();
-        return;
-    }
+  const runAction = (id: ComposerNoticeActionId) => {
+    if (id === "retry-turn") onRetryLastTurn?.();
+    else useUIState.getState().openSettings("ai");
   };
 
   const renderAction = (action: ComposerNoticeAction, primary: boolean) => {
@@ -189,13 +135,6 @@ export function ComposerNotice({
             ) : null}
           </Alert>
         </div>
-      ) : null}
-      {builtInAgent && !hosted ? (
-        <ProviderApiKeyCommand
-          isOpen={keyManagerOpen}
-          onClose={() => setKeyManagerOpen(false)}
-          initialProviderId={providerId}
-        />
       ) : null}
     </>
   );

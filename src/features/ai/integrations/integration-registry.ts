@@ -1,9 +1,8 @@
 export const CODEX_INTEGRATION_ID = "codex";
 
-export const BUILT_IN_AI_INTEGRATIONS = [
-  {
-    id: CODEX_INTEGRATION_ID,
-    name: "Codex",
-    description: "OpenAI Codex with native threads, approvals, skills, MCP, and review",
-  },
-] as const;
+/** External coding agents are discovered through ACP. */
+export const BUILT_IN_AI_INTEGRATIONS: ReadonlyArray<{
+  id: string;
+  name: string;
+  description: string;
+}> = [];

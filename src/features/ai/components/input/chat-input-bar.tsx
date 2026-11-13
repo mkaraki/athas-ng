@@ -74,7 +74,6 @@ import { useProjectStore } from "@/features/workspace/stores/project.store";
 import { chatContentWidth } from "../chat/chat-content-width";
 import { ComposerAgentSelector } from "./composer-agent-selector";
 import { ChatPreferencesMenu } from "./chat-preferences-menu";
-import { AthasUsageIndicator } from "../athas-usage-indicator";
 import { useChatModeSource } from "@/features/ai/hooks/use-chat-mode";
 import {
   useComposerAcpSession,
@@ -103,9 +102,6 @@ import { FileMentionDropdown } from "../mentions/file-mention-dropdown";
 import { SlashCommandDropdown } from "../mentions/slash-command-dropdown";
 import { ContextSelector } from "../selectors/context-selector";
 import { useAgentEnvironment } from "@/features/ai/cloud-agents/hooks/use-agent-environment";
-import { useCloudTargets } from "@/features/ai/cloud-agents/hooks/use-cloud-targets";
-import { ComposerEnvironmentControls } from "@/features/ai/cloud-agents/components/composer-environment-controls";
-import { CloudComposerNotice } from "@/features/ai/cloud-agents/components/cloud-composer-notice";
 
 const AIChatInputBar = memo(function AIChatInputBar({
   chatId,
@@ -196,8 +192,6 @@ const AIChatInputBar = memo(function AIChatInputBar({
   const session = useAIChatStore((state) => state.chats.find((chat) => chat.id === chatId));
   const environment = useAgentEnvironment({ chatId, draftKey: surfaceId });
   const isCloud = environment.kind === "cloud";
-  const activeProjectPath = useProjectStore((state) => state.rootFolderPath ?? null);
-  const cloudTargets = useCloudTargets(environment, session?.workspacePath ?? activeProjectPath);
   const composerAcp = useComposerAcpSession(chatId, currentAgentId);
   usePrepareAcpSession(composerAcp, { enabled: !isCloud });
   const acpSession = composerAcp.session;
@@ -1347,14 +1341,6 @@ const AIChatInputBar = memo(function AIChatInputBar({
             onRetryLastTurn={onRetryLastTurn}
           />
         ) : null}
-        {!isTerminalMode ? (
-          <CloudComposerNotice
-            environment={environment}
-            targets={cloudTargets}
-            currentAgentId={currentAgentId}
-            onAgentChange={onAgentChange}
-          />
-        ) : null}
         {isTerminalMode ? (
           <div className="px-3 pt-2.5">
             <ChromeBar region="content" surface="transparent">
@@ -1475,11 +1461,6 @@ const AIChatInputBar = memo(function AIChatInputBar({
             onSessionConfigChange={changeSessionConfigOption}
             onBeforeOpen={closeInlineMenus}
           />
-          <ComposerEnvironmentControls
-            environment={environment}
-            targets={cloudTargets}
-            onBeforeOpen={closeInlineMenus}
-          />
 
           <div className="ml-auto flex shrink-0 items-center gap-1">
             {isCloud ? null : contextBudget ? (
@@ -1487,7 +1468,6 @@ const AIChatInputBar = memo(function AIChatInputBar({
             ) : (
               <AcpContextMeter usage={acpSession.usage} />
             )}
-            <AthasUsageIndicator placement="composer" />
             <ChatPreferencesMenu
               currentAgentId={currentAgentId}
               canChangeAgent={Boolean(onAgentChange)}

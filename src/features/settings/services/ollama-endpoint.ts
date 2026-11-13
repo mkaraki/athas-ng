@@ -1,3 +1,4 @@
+import { isLocalEndpointUrl } from "@/utils/local-endpoint";
 export const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
 export const OLLAMA_CLOUD_BASE_URL = "https://ollama.com";
 
@@ -14,7 +15,13 @@ export function resolveOllamaBaseUrl(value: string): string | null {
     if ((url.protocol !== "http:" && url.protocol !== "https:") || !url.hostname) {
       return null;
     }
-    if (url.search || url.hash) {
+    if (
+      !isLocalEndpointUrl(url.toString()) ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash
+    ) {
       return null;
     }
 

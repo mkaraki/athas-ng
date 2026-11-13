@@ -1,14 +1,9 @@
 import type { AgentMessageSubmitResult, AgentType } from "@/features/ai/types/ai-chat.types";
-import { getProviderById } from "@/features/ai/types/providers.types";
 
-/**
- * Why Athas's own agent can't send with this provider: Athas models need an Athas account, the
- * others need the user's API key for that provider.
- */
 export function getProviderAccessError(providerId: string): string {
-  if (providerId === "athas") return "Sign in to Athas to use Athas models.";
-  const name = getProviderById(providerId)?.name ?? "this provider";
-  return `Add your ${name} API key in Settings to use ${name} models.`;
+  return providerId === "ollama"
+    ? "Choose an installed local Ollama model in Settings."
+    : "This provider is no longer supported. Choose Ollama or an ACP agent.";
 }
 
 export function getAgentMessageAccess(
@@ -16,14 +11,9 @@ export function getAgentMessageAccess(
   hasProviderAccess: boolean,
   providerId?: string,
 ): AgentMessageSubmitResult {
-  if (agentId !== "custom" || hasProviderAccess) {
+  if (agentId === "codex") return { accepted: false, error: "Choose an ACP agent for Codex." };
+  if (agentId !== "custom" || ((!providerId || providerId === "ollama") && hasProviderAccess)) {
     return { accepted: true };
   }
-
-  return {
-    accepted: false,
-    error: providerId
-      ? getProviderAccessError(providerId)
-      : "Add an API key in Settings to use this provider.",
-  };
+  return { accepted: false, error: getProviderAccessError(providerId ?? "ollama") };
 }

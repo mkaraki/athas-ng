@@ -259,9 +259,12 @@ describe("agent chat surface", () => {
     expect(container.textContent).toContain("Where should we begin?");
   });
 
-  it("asks for credentials before sending with the built-in agent", async () => {
+  it("blocks a removed provider before sending with the built-in agent", async () => {
     chatId = useAIChatStore.getState().actions.createNewChat("custom", { reuseEmpty: false });
     setMessages([]);
+    useAIChatStore.setState((state) => {
+      state.chats.find((chat) => chat.id === chatId)!.providerId = "openai";
+    });
     useAIChatStore.setState({ providerApiKeys: new Map() });
     replaceActions({ checkApiKey: vi.fn(async () => {}) });
     await render();

@@ -5,9 +5,6 @@ import type { IntelligenceConnection } from "@/features/ai/intelligence/types/in
 import { useAIModelSettings } from "@/features/ai/hooks/use-ai-model-settings";
 import { withTaskConnection } from "@/features/ai/services/ai-model-preferences";
 import { useSettingsStore } from "@/features/settings/stores/settings.store";
-import { useAuthStore } from "@/features/auth/stores/auth.store";
-
-const ATHAS_TAB_MODEL_NAME = "Athas Tab";
 
 /**
  * The model Tab completion runs on, for every place that shows or changes it: the explicit
@@ -16,41 +13,25 @@ const ATHAS_TAB_MODEL_NAME = "Athas Tab";
 export function useTabCompletionModel() {
   const state = useAIModelSettings();
   const enabled = useSettingsStore((store) => store.settings.aiCompletion);
-  const policy = useAuthStore((store) => store.subscription?.enterprise?.policy);
-  const allowed = policy?.managedMode ? policy.aiCompletionEnabled : true;
+  const allowed = true;
 
   const stored = state.preferences.tasks.autocomplete;
-  const choice = stored && stored.providerId !== "auto" ? stored : null;
+  const choice = stored && stored.providerId === "ollama" ? stored : null;
   const resolved = resolveAutocompleteConnection({
     ...state.context,
     isLocalProvider: state.isLocalProvider,
   });
   const provider = useProviderById(resolved?.providerId ?? "");
   const modelName = useModelName(resolved?.providerId ?? "", resolved?.modelId ?? "");
-  const defaultIsLocal = state.isLocalProvider(state.defaultConnection.providerId);
   const resolvedIsLocal = resolved ? state.isLocalProvider(resolved.providerId) : false;
 
   /** Short name for compact places, such as the editor toolbar menu. */
-  const shortName = !resolved
-    ? "Choose a model"
-    : resolved.providerId === "athas"
-      ? ATHAS_TAB_MODEL_NAME
-      : (modelName ?? resolved.modelId);
+  const shortName = !resolved ? "Choose a model" : (modelName ?? resolved.modelId);
   const providerName = resolved ? (provider?.name ?? resolved.providerId) : "";
 
   const describe = () => {
-    if (!resolved) {
-      if (defaultIsLocal) return "Choose a local model; Automatic never uses Athas here";
-      return state.isAuthenticated
-        ? "Athas Tab needs Pro, or choose your own model"
-        : "Sign in for Athas Tab, or choose your own model";
-    }
-    const prefix = choice ? "" : "Automatic: ";
-    if (resolved.providerId === "athas") return `${prefix}Athas Tab, included in Pro`;
-    if (resolvedIsLocal) return `${prefix}${shortName}, runs locally`;
-    return `${prefix}${shortName} on your ${providerName} key${
-      defaultIsLocal ? ", sends code off your network" : ""
-    }`;
+    if (!resolved) return "Choose a local Ollama model";
+    return `${choice ? "" : "Automatic: "}${shortName}, runs locally`;
   };
 
   return {

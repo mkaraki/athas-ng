@@ -5,14 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import { ComposerAgentSelector } from "../components/input/composer-agent-selector";
 
 const state = vi.hoisted(() => ({
-  keys: new Map([["openai", true]]),
-  providers: [
-    { id: "athas", name: "Athas", models: [] },
-    { id: "openai", name: "OpenAI", models: [{ id: "gpt-test", name: "GPT Test" }] },
-    { id: "anthropic", name: "Anthropic", models: [] },
-  ],
+  keys: new Map([["ollama", true]]),
+  providers: [{ id: "ollama", name: "Ollama", models: [] }],
   models: {
-    athas: [
+    ollama: [
       { id: "auto", name: "Automatic" },
       { id: "moonshotai/kimi-k2.6", name: "Kimi K2.6", contextWindow: 262144 },
       { id: "anthropic/claude-sonnet-5", name: "Claude Sonnet 5", input: 3, output: 15 },
@@ -117,7 +113,7 @@ async function render(props: Partial<ComponentProps<typeof ComposerAgentSelector
       <ComposerAgentSelector
         cwd="/repo"
         currentAgentId="custom"
-        providerId="athas"
+        providerId="ollama"
         modelId="auto"
         sessionConfigOptions={[]}
         onModelChange={onModelChange}
@@ -211,28 +207,28 @@ describe("composer model selector", () => {
   it("opens on a short menu of Provider and Model rows showing the current choice", async () => {
     await render();
     await open();
-    expect(subTriggers()).toEqual(["ProviderAthas", "ModelAutomatic"]);
+    expect(subTriggers()).toEqual(["ProviderOllama", "Modelauto"]);
     expect(menus()).toHaveLength(1);
     expect(rowsOf(menus()[0])).toHaveLength(0);
     expect(document.body.textContent).toContain("Configure models…");
   });
 
-  it("lists Athas, connected providers and installed agents under Provider", async () => {
+  it("lists local models and installed agents under Provider", async () => {
     await render();
     await open();
     const providers = await openSubmenu("Provider");
-    expect(names(rowsOf(providers))).toEqual(["AthasSign in", "OpenAI", "Codex", "Gemini CLI"]);
-    expect(labelsOf(providers)).toEqual(["Your API keys", "Agents"]);
+    expect(names(rowsOf(providers))).toEqual(["Ollama", "Codex", "Gemini CLI"]);
+    expect(labelsOf(providers)).toEqual(["Local models", "Agents"]);
     expect(rowsOf(providers)[0].getAttribute("aria-checked")).toBe("true");
     expect(state.loadModels).not.toHaveBeenCalledWith("anthropic");
   });
 
   it("switches provider to its first model and returns to the top level", async () => {
-    await render();
+    await render({ currentAgentId: "gemini" });
     await open();
     const providers = await openSubmenu("Provider");
-    await act(async () => rowsOf(providers)[1].click());
-    expect(onModelChange).toHaveBeenCalledExactlyOnceWith("gpt-test", "openai");
+    await act(async () => rowsOf(providers)[0].click());
+    expect(onModelChange).toHaveBeenCalledExactlyOnceWith("auto", "ollama");
     expect(onAgentChange).not.toHaveBeenCalled();
     expect(menus()).toHaveLength(1);
     expect(document.activeElement).toBe(subTrigger("Provider"));
@@ -247,18 +243,13 @@ describe("composer model selector", () => {
     expect(onModelChange).not.toHaveBeenCalled();
   });
 
-  it("puts recommended Athas models on top of a searchable model list", async () => {
+  it("selects a local model from a searchable catalog", async () => {
     await render();
     await open();
     const models = await openSubmenu("Model");
-    expect(labelsOf(models)).toEqual(["Recommended", "All models"]);
-    expect(names(rowsIn(models, "Recommended"))).toEqual(["Automatic", "Claude Sonnet 5"]);
-    expect(rowsIn(models, "All models")).toHaveLength(9);
-    const sonnet = rowsIn(models, "All models")[2];
-    expect(sonnet.getAttribute("title")).toContain("Anthropic");
-    expect(sonnet.getAttribute("title")).toContain("billed at list price +35%");
-    await act(async () => rowsIn(models, "All models")[1].click());
-    expect(onModelChange).toHaveBeenCalledExactlyOnceWith("moonshotai/kimi-k2.6", "athas");
+    expect(rowsOf(models)).toHaveLength(9);
+    await act(async () => rowsOf(models)[1].click());
+    expect(onModelChange).toHaveBeenCalledExactlyOnceWith("moonshotai/kimi-k2.6", "ollama");
   });
 
   it("filters the model list as the user searches", async () => {
@@ -268,22 +259,11 @@ describe("composer model selector", () => {
     await search("kimi");
     expect(labelsOf(models)).toEqual([]);
     expect(names(rowsOf(models))).toEqual(["Kimi K2.6"]);
-    await search("anthropic");
+    await search("claude");
     expect(names(rowsOf(models))).toEqual(["Claude Sonnet 5"]);
     await search("missing-model");
     expect(rowsOf(models)).toHaveLength(0);
     expect(models.textContent).toContain("No matching models");
-  });
-
-  it("shows a short provider list without search and selects from it", async () => {
-    await render({ providerId: "openai", modelId: "gpt-test" });
-    await open();
-    expect(subTriggers()).toEqual(["ProviderOpenAI", "ModelGPT Test"]);
-    const models = await openSubmenu("Model");
-    expect(document.querySelector('input[placeholder="Search models…"]')).toBeNull();
-    expect(names(rowsOf(models))).toEqual(["GPT Test", "GPT Mini"]);
-    await act(async () => rowsOf(models)[1].click());
-    expect(onModelChange).toHaveBeenCalledExactlyOnceWith("gpt-mini", "openai");
   });
 
   it("offers Codex models and reasoning effort while Codex is the agent", async () => {
@@ -392,10 +372,9 @@ describe("composer model selector", () => {
     expect(document.activeElement).toBe(provider);
 
     await press(provider, "ArrowRight");
-    await press(document.activeElement!, "ArrowDown");
-    expect(document.activeElement?.textContent).toBe("OpenAI");
+    expect(document.activeElement?.textContent).toBe("Ollama");
     await press(document.activeElement!, "Enter");
-    expect(onModelChange).toHaveBeenCalledExactlyOnceWith("gpt-test", "openai");
+    expect(onModelChange).not.toHaveBeenCalled();
     expect(menus()).toHaveLength(1);
   });
 

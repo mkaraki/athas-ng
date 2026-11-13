@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import {
   DEFAULT_OLLAMA_BASE_URL,
-  isOllamaCloudUrl,
   normalizeOllamaBaseUrl,
   resolveOllamaBaseUrl,
 } from "@/features/settings/services/ollama-endpoint";
@@ -12,7 +11,7 @@ describe("Ollama endpoints", () => {
     ["ollama.lan:11434/", "http://ollama.lan:11434"],
     ["http://10.0.0.8:11434///", "http://10.0.0.8:11434"],
     ["http://[fd00::24]:11434", "http://[fd00::24]:11434"],
-    ["https://gateway.example.test/ollama/", "https://gateway.example.test/ollama"],
+    ["https://gateway.lan/ollama/", "https://gateway.lan/ollama"],
   ])("accepts local and LAN endpoint %s", (input, expected) => {
     expect(resolveOllamaBaseUrl(input)).toBe(expected);
   });
@@ -27,12 +26,5 @@ describe("Ollama endpoints", () => {
   it("uses localhost only when normalization receives an unusable value", () => {
     expect(normalizeOllamaBaseUrl("  ollama.lan:11434/ ")).toBe("http://ollama.lan:11434");
     expect(normalizeOllamaBaseUrl(" ")).toBe(DEFAULT_OLLAMA_BASE_URL);
-  });
-
-  it("only treats Ollama-owned hosts as cloud", () => {
-    expect(isOllamaCloudUrl("https://ollama.com")).toBe(true);
-    expect(isOllamaCloudUrl("https://api.ollama.com/")).toBe(true);
-    expect(isOllamaCloudUrl("http://ollama.lan:11434")).toBe(false);
-    expect(isOllamaCloudUrl("http://ollama.com.example.test")).toBe(false);
   });
 });

@@ -188,7 +188,6 @@ export const commandPaletteOrder: CommandPaletteSlot[] = [
   "editor.addSelectionToNewChat",
   "ai.openCustomize",
   "ai.openContinuousAgents",
-  "ai.openCloudAgents",
   "ai.manageAllowedCommands",
   "ai.openAcpInspector",
   "ai.importAgentSession",

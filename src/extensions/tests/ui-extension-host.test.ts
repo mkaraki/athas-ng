@@ -524,7 +524,7 @@ describe("UI extension host contributions", () => {
     );
   });
 
-  it("registers AI providers declared in the manifest and removes them on unload", async () => {
+  it("refuses direct AI providers declared by extensions", async () => {
     const { worker } = await loadWorkerExtension("test.ai", {
       icon: "https://cdn.example.com/test-ai.svg",
       aiProviders: [
@@ -562,27 +562,7 @@ describe("UI extension host contributions", () => {
       },
     });
 
-    const provider = getProvider("test-ai-provider");
-    expect(provider).toBeDefined();
-    await expect(provider!.validateApiKey("secret")).resolves.toBe(true);
-    expect(worker.lastWorkerCall()).toMatchObject({
-      method: "aiProvider.validateApiKey",
-      params: ["test-ai-provider", "secret"],
-    });
-
-    const [settingsAction] = readSettingsActions("test-ai-provider");
-    expect(settingsAction).toMatchObject({
-      id: "test.ai.settings",
-      label: "Provider settings",
-      buttonLabel: "Configure",
-      description: "Choose a model",
-      icon: "sparkles",
-    });
-    await settingsAction.execute();
-    expect(worker.lastWorkerCall()).toMatchObject({
-      method: "executeCommand",
-      params: ["test.ai.configure"],
-    });
+    expect(getProvider("test-ai-provider")).toBeUndefined();
 
     await uiExtensionHost.unloadExtension("test.ai");
 

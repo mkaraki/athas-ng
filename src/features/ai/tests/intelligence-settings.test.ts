@@ -27,7 +27,7 @@ function snapshot(scope = "personal", model = ""): IntelligenceSnapshot {
     ],
     preferences: {
       ...defaultIntelligencePreferences(),
-      defaultConnection: { providerId: "openrouter", modelId: model },
+      defaultConnection: { providerId: "ollama", modelId: model },
     },
   };
 }
@@ -48,25 +48,25 @@ function setup() {
 }
 
 describe("Intelligence connection choices", () => {
-  it("uses personal BYOK without Pro and honors explicit choices for Pro users", () => {
+  it("uses local preferences independent of account state", () => {
     const params = {
       task: "commit-message" as const,
       preferences: defaultIntelligencePreferences(),
       hasIntelligence: false,
-      personalConnection: { providerId: "anthropic", modelId: "personal-model" },
+      personalConnection: { providerId: "ollama", modelId: "personal-model" },
     };
     expect(resolveIntelligenceConnection(params)).toEqual(params.personalConnection);
     expect(resolveIntelligenceConnection({ ...params, hasIntelligence: true }).providerId).toBe(
-      "athas",
+      "ollama",
     );
-    params.preferences.tasks["commit-message"] = { providerId: "vercel", modelId: "user/model" };
+    params.preferences.tasks["commit-message"] = { providerId: "ollama", modelId: "user/model" };
     expect(resolveIntelligenceConnection({ ...params, hasIntelligence: true })).toEqual({
-      providerId: "vercel",
+      providerId: "ollama",
       modelId: "user/model",
     });
   });
 
-  it("gives a hosted connection without a model the automatic model", () => {
+  it("falls back to the local model for a legacy hosted choice", () => {
     const preferences = defaultIntelligencePreferences();
     preferences.tasks.agent = { providerId: "athas", modelId: "" };
     expect(
@@ -74,9 +74,9 @@ describe("Intelligence connection choices", () => {
         task: "agent",
         preferences,
         hasIntelligence: true,
-        personalConnection: { providerId: "anthropic", modelId: "personal-model" },
+        personalConnection: { providerId: "ollama", modelId: "personal-model" },
       }),
-    ).toEqual({ providerId: "athas", modelId: "auto" });
+    ).toEqual({ providerId: "ollama", modelId: "personal-model" });
   });
 });
 

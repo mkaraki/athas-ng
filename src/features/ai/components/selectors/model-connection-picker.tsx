@@ -19,9 +19,7 @@ import { ChevronDownIcon } from "@/ui/icons";
 import { cn } from "@/utils/cn";
 import { type MenuSearch, useMenuSearch } from "@/ui/menu-search";
 import {
-  AthasModelSections,
   ModelResultsProvider,
-  ModelSection,
   ProviderModels,
   useModelSearchResults,
 } from "./model-connection-menu";
@@ -48,24 +46,12 @@ interface ModelConnectionPickerProps {
   "aria-label": string;
 }
 
-const ATHAS_TAB_MODEL_LABEL = "Athas Tab model";
-
-function isAthasAutomatic(connection: IntelligenceConnection) {
-  return (
-    connection.providerId === "athas" && (!connection.modelId || connection.modelId === "auto")
-  );
-}
-
-/**
- * Picks a model from one searchable list with a section per connection (Recommended and
- * Athas, then every provider the user connected).
- */
+/** Picks an installed model from a local Ollama connection. */
 export function ModelConnectionPicker({
   value,
   onChange,
   inheritLabel,
   disabled,
-  purpose = "chat",
   width = "content",
   appearance = "field",
   "aria-label": ariaLabel,
@@ -78,16 +64,10 @@ export function ModelConnectionPicker({
   const modelName = useModelName(providerId, modelId);
   const label = !value
     ? (inheritLabel ?? "Choose a model")
-    : value.providerId === "auto"
-      ? // Saved by the earlier settings page: resolves like Automatic, not like the default.
-        "Automatic"
-      : isAthasAutomatic(value)
-        ? purpose === "completion"
-          ? ATHAS_TAB_MODEL_LABEL
-          : "Athas Automatic"
-        : modelName || modelId || provider?.name || providerId;
-  const title =
-    value && provider && !isAthasAutomatic(value) ? `${label} via ${provider.name}` : label;
+    : providerId === "auto"
+      ? "Automatic"
+      : modelName || modelId || provider?.name || "Choose a local model";
+  const title = value && provider ? `${label} via ${provider.name}` : label;
 
   return (
     <DropdownMenu
@@ -123,7 +103,6 @@ export function ModelConnectionPicker({
           value={value}
           onChange={onChange}
           inheritLabel={inheritLabel}
-          purpose={purpose}
           search={search}
           isOpen={isContentMounted}
         />
@@ -150,7 +129,6 @@ export function ModelConnectionMenuList({
   value,
   onChange,
   inheritLabel,
-  purpose = "chat",
   search,
   isOpen,
 }: ModelConnectionMenuListProps) {
@@ -183,23 +161,6 @@ export function ModelConnectionMenuList({
         ) : null}
         {isOpen ? (
           <ModelResultsProvider value={reportResults}>
-            {purpose === "completion" ? (
-              <ModelSection
-                id="athas"
-                label="Athas"
-                models={[{ id: "auto", name: ATHAS_TAB_MODEL_LABEL, keywords: ["automatic"] }]}
-                selected={value && providerId === "athas" ? modelId || "auto" : ""}
-                onSelect={(id) => onChange({ providerId: "athas", modelId: id })}
-                providerId="athas"
-                search={search}
-              />
-            ) : (
-              <AthasModelSections
-                selected={value && providerId === "athas" ? modelId || "auto" : ""}
-                search={search}
-                onSelect={(id) => onChange({ providerId: "athas", modelId: id })}
-              />
-            )}
             {providers.map((item) => (
               <ProviderModels
                 key={item.id}

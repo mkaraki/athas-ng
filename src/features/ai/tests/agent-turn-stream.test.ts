@@ -81,7 +81,7 @@ function createHost(chatId: string) {
   return {
     surfaceChatId: chatId,
     isBoundToChat: true,
-    fallbackProviderId: "athas",
+    fallbackProviderId: "ollama",
     outputStyle: "default",
     allProjectFiles: [],
     selectedFilesPaths: new Set<string>(),
@@ -110,11 +110,11 @@ function customChat(hasKey: boolean) {
   const chatId = useAIChatStore.getState().actions.createNewChat("custom");
   useAIChatStore.setState((state) => {
     const chat = state.chats.find((candidate) => candidate.id === chatId)!;
-    chat.providerId = "openai";
+    chat.providerId = "ollama";
     chat.modelId = "gpt-5.6-sol";
   });
   useAIChatStore.setState({
-    providerApiKeys: new Map(useAIChatStore.getState().providerApiKeys).set("openai", hasKey),
+    providerApiKeys: new Map(useAIChatStore.getState().providerApiKeys).set("ollama", hasKey),
   });
   return chatId;
 }
@@ -136,27 +136,30 @@ beforeEach(() => {
 });
 
 describe("starting a turn", () => {
-  it("refuses a custom-provider turn without an API key", async () => {
+  it("refuses a removed provider even with an old API key", async () => {
     const chatId = customChat(false);
+    useAIChatStore.setState((state) => {
+      state.chats.find((chat) => chat.id === chatId)!.providerId = "openai";
+    });
     const host = createHost(chatId);
 
     await runAgentTurn({ content: "Hello" }, host);
 
     expect(host.showError).toHaveBeenCalledWith(
-      "Add your OpenAI API key in Settings to use OpenAI models.",
+      "This provider is no longer supported. Choose Ollama or an ACP agent.",
     );
     expect(messages(chatId)).toEqual([]);
     expect(mocks.stream).not.toHaveBeenCalled();
   });
 
-  it("asks to sign in for Athas models and for a key for the user's own providers", () => {
-    expect(getAgentAccessMessage("custom", "athas", "x")).toBe(
-      "Sign in to Athas to use Athas models.",
+  it("explains local setup and removed provider access", () => {
+    expect(getAgentAccessMessage("custom", "ollama", "x")).toBe(
+      "Choose an installed local Ollama model in Settings.",
     );
     expect(getAgentAccessMessage("custom", "openai", undefined)).toBe(
-      "Add your OpenAI API key in Settings to use OpenAI models.",
+      "This provider is no longer supported. Choose Ollama or an ACP agent.",
     );
-    expect(getAgentAccessMessage("opencode", "athas", undefined)).toBe("This agent is not ready.");
+    expect(getAgentAccessMessage("opencode", "ollama", undefined)).toBe("This agent is not ready.");
   });
 
   it("ignores empty prompts and edits of unknown messages", async () => {
