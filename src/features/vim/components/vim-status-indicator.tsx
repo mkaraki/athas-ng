@@ -9,7 +9,10 @@ const VimStatusIndicator = () => {
     return null;
   }
 
-  const modeDisplay = `${mode.charAt(0).toUpperCase()}${mode.slice(1)}`;
+  const modeDisplay = mode
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 
   return (
     <span

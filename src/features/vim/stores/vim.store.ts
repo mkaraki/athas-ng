@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { useSettingsStore } from "@/features/settings/stores/settings.store";
 import { createSelectors } from "@/utils/zustand-selectors";
 
-export type VimMode = "normal" | "insert" | "visual";
+export type VimMode = "normal" | "insert" | "visual" | "visual-line" | "visual-block";
 
 interface VimState {
   mode: VimMode;

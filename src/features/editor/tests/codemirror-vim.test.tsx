@@ -102,6 +102,19 @@ describe("athasVim", () => {
     expect(onModeChange).toHaveBeenLastCalledWith("visual");
   });
 
+  it.each([
+    ["V", "visual-line"],
+    ["<C-v>", "visual-block"],
+  ])("selects and deletes using %s", (key, mode) => {
+    const onModeChange = vi.fn();
+    const view = createView("abc\ndef\nghi", athasVim(onModeChange));
+    Vim.handleKey(cm(view), key, "user");
+    expect(onModeChange).toHaveBeenLastCalledWith(mode);
+    Vim.handleKey(cm(view), "d", "user");
+    expect(view.state.doc.toString()).toBe(mode === "visual-line" ? "def\nghi" : "bc\ndef\nghi");
+    expect(onModeChange).toHaveBeenLastCalledWith("normal");
+  });
+
   it("handles keys before the editor's other keymaps", () => {
     const other = vi.fn(() => true);
     const view = createView("hello", [keymap.of([{ key: "x", run: other }]), athasVim(vi.fn())]);
@@ -189,6 +202,17 @@ describe("CodeMirrorVim", () => {
     expect(getCM(view)).toBeNull();
     expect(useVimStore.getState().mode).toBe("normal");
   });
+
+  it.each(["visual-line", "visual-block"] as const)(
+    "applies the %s palette mode to the active editor",
+    (mode) => {
+      const view = createView("abc\ndef");
+      act(() => root.render(<CodeMirrorVim host={host(view)} />));
+      act(() => useVimStore.getState().actions.setMode(mode));
+      expect(cm(view).state.vim?.visualMode).toBe(true);
+      expect(useVimStore.getState().mode).toBe(mode);
+    },
+  );
 
   it("sends vim undo to the host history", () => {
     const view = createView("hello");
