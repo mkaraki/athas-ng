@@ -12,7 +12,6 @@ import { Annotation, Compartment, EditorState, type Extension, Prec } from "@cod
 import {
   dropCursor,
   EditorView,
-  highlightActiveLine,
   highlightActiveLineGutter,
   highlightSpecialChars,
   keymap,
@@ -26,6 +25,7 @@ import {
 } from "../engines/codemirror/document-change";
 import { loadCodeMirrorLanguage } from "../engines/codemirror/languages";
 import { athasEditorTheme } from "../engines/codemirror/theme";
+import { athasActiveLine } from "../engines/codemirror/active-line";
 import { codeMirrorViewExtensions } from "../engines/codemirror/view-options";
 import { useEditorViewSettings } from "../hooks/use-editor-view-settings";
 
@@ -161,7 +161,7 @@ export function NotebookCodeCellEditor({
           closeBrackets(),
           autocompletion(),
           wordCompletions,
-          highlightActiveLine(),
+          athasActiveLine,
           highlightActiveLineGutter(),
           search({ top: true }),
           keymap.of([
