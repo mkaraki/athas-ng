@@ -1,3 +1,5 @@
+This is a patched version of Athas with features added, changed, and removed. Some patches are _not good_ for everyone.
+
 <div align="center">
   <img src="public/logo.png" alt="Athas" width="120">
   <h1>Athas</h1>

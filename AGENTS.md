@@ -1,3 +1,31 @@
+## Fork workflow
+
+- This repository is a fork of Athas. `main` tracks upstream; `mkaraki/master` integrates the fork through merges. Make edits on patch branches rather than directly on either branch.
+- Create one branch under `mkaraki/` per feature, starting from upstream `main`. Keep each patch independent so other users can merge it into their own Athas checkouts. Do not base patches on the integration branch or merge other fork patches into them.
+- Keep fork changes to `README.md` and `AGENTS.md`, including maintenance instructions, on `mkaraki/releasing/change-docs`. The rule requiring an explicit user request before editing `AGENTS.md` still applies.
+- Keep application names, installer/product identity, and other non-version branding on `mkaraki/releasing/rebranding`. Keep fork version strings on `mkaraki/releasing/bump-version`. All three release-maintenance branches start from `main` and must remain independently mergeable.
+- When merging patch branches to `mkaraki/master`, use `--no-ff` and retain the source branches.
+- When upstream changes, follow the update instructions section to update the whole codebase.
+- For a completed patch update, increment the numeric fork suffix on `mkaraki/releasing/bump-version` once, for example from `-mkaraki4` to `-mkaraki5`. Keep the upstream version and suffix in sync across `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, and the `athas` entry in `Cargo.lock`. Preserve the current version for history-only reconstruction. Keep `bundle.windows.wix.version` numeric-only and aligned with the upstream MSI mapping.
+- The upstream release scripts currently reject `-mkarakiN`, require `main`, and target upstream. Record dry-run and release-check failures accurately; validate fork version consistency and code separately. Do not run a real upstream release command to publish this fork.
+
+## Update instructions
+
+Remotes: `upstream` is Athas, `origin` is this fork. Push only `mkaraki/*` branches, only with `--force-with-lease`. Never commit to `main`; the only allowed change to it is `--ff-only` to `upstream/main`.
+If the `upstream` remote is not set, use `https://github.com/athasdev/athas` for the upstream URL.
+
+1. Read `AGENTS.md` on the current `mkaraki/master`. Fetch `upstream` and fast-forward `main`.
+2. Tag the current tips of `mkaraki/master`, every patch branch, and the three releasing branches as `mkaraki/archive/<YYYYMMDD>/<branch>`. Do not rename or delete branches.
+3. Patch branches are `mkaraki/*` except `master`, `releasing/*`, and `archive/*`. For each, read `git log main..<branch>` for its intent, then rebase onto `main`, resolving conflicts in place under the same branch name. If upstream restructured the code and a rebase is not feasible, reimplement on the same branch name from `main` and report it.
+4. Rebase `mkaraki/releasing/rebranding` and `mkaraki/releasing/change-docs` onto `main`. Recreate `mkaraki/releasing/bump-version` from `main` by applying the version rule.
+5. Recreate `mkaraki/master` from `main`. Merge with `--no-ff`, in order: patch branches, `rebranding`, `change-docs`, `bump-version`.
+6. Verify: upstream's build/test commands pass, the fork version is consistent in all four files, and summarize `git diff <archive tag> mkaraki/master`.
+7. Stop and report. Push only after the user approves.
+
+---
+
+The upstream Athas instructions follow. Use the fork workflow above where branch management, fork documentation, and versioning differ from upstream.
+
 ## Project Overview
 
 - Athas is a desktop code editor built with Tauri, React, TypeScript, and Rust.
