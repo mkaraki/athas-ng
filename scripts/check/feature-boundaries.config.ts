@@ -167,7 +167,6 @@ export const featureBoundaries: FeatureBoundaryConfig = {
         "Marks a collapsed project in the workbench sidebar whose session waits on the user.",
     },
     auth: {
-      "components/account-menu.tsx": ACTIVITY_CHROME,
       "components/pro-gate.tsx": "Gates Pro-only UI; extensions' generative UI renders through it.",
     },
     bootstrap: {

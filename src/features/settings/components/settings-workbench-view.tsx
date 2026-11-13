@@ -1,4 +1,3 @@
-import { SharingSettings } from "@/features/sharing/components/sharing-settings";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import type { SettingsTabItem } from "@/features/settings/config/settings-tabs";
 import { useSettingsPage } from "@/features/settings/hooks/use-settings-page";
@@ -21,7 +20,6 @@ import {
 } from "@/ui/workbench";
 
 import { AdvancedSettings } from "./tabs/advanced-settings";
-import { AccountSettings } from "./tabs/account-settings";
 import {
   AIAgentsSettings,
   AIModelsSettings,
@@ -30,9 +28,7 @@ import {
   TabCompletionSettings,
 } from "./tabs/ai-settings";
 import { AppearanceSettings } from "./tabs/appearance-settings";
-import { CollaborationSettings } from "./tabs/collaboration-settings";
 import { EditorSettings } from "./tabs/editor-settings";
-import { EnterpriseSettings } from "./tabs/enterprise-settings";
 import { GeneralSettings } from "./tabs/general-settings";
 import { GitSettings } from "./tabs/git-settings";
 import { KeyboardSettings } from "./tabs/keyboard-settings";
@@ -44,11 +40,6 @@ const SETTINGS_NAVIGATION_GROUPS: Array<{ id: string; label?: string; tabs: Sett
   { id: "app", tabs: ["general", "appearance", "notifications", "keyboard"] },
   { id: "code", label: "Code", tabs: ["editor", "file-explorer", "terminal", "git"] },
   { id: "ai", label: "AI", tabs: ["ai", "ai-models", "ai-completion", "ai-agents", "ai-mcp"] },
-  {
-    id: "account",
-    label: "Account",
-    tabs: ["account", "sharing", "collaboration", "enterprise"],
-  },
   { id: "advanced", tabs: ["advanced"] },
 ];
 
@@ -90,8 +81,6 @@ const SettingsWorkbenchView = () => {
     activeTab,
     visibleTabs,
     selectTab,
-    canShowCollaborationSettings,
-    canShowEnterpriseSettings,
     searchQuery,
     setSearchQuery,
     searchResults,
@@ -190,10 +179,6 @@ const SettingsWorkbenchView = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "account":
-        return <AccountSettings />;
-      case "sharing":
-        return <SharingSettings />;
       case "notifications":
         return <NotificationsSettings />;
       case "general":
@@ -217,9 +202,9 @@ const SettingsWorkbenchView = () => {
       case "keyboard":
         return <KeyboardSettings />;
       case "collaboration":
-        return canShowCollaborationSettings ? <CollaborationSettings /> : <GeneralSettings />;
+        return <GeneralSettings />;
       case "enterprise":
-        return canShowEnterpriseSettings ? <EnterpriseSettings /> : <GeneralSettings />;
+        return <GeneralSettings />;
       case "advanced":
         return <AdvancedSettings />;
       case "terminal":

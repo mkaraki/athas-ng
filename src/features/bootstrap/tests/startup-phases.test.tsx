@@ -153,7 +153,6 @@ describe("startup phases", () => {
       "settings:start",
       "settings:loaded",
       "phase:settings-ready",
-      "settingsSync:saved-font",
       "fontLoading:saved-font",
       "nativeMenuState:saved-font",
       "systemAccessibility:saved-font",
@@ -171,7 +170,7 @@ describe("startup phases", () => {
     mocks.state.finishSettingsLoad("failed");
     await act(() => bootstrap);
 
-    expect(mocks.state.events).toContain("settingsSync:default-font");
+    expect(mocks.state.events).not.toContain("settingsSync:default-font");
     expect(mocks.state.events.filter((event) => event.startsWith("phase:"))).toEqual([
       "phase:settings-ready",
       "phase:workbench-ready",

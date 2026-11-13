@@ -1,10 +1,9 @@
 import { getProjectToolPaneId } from "@/features/layout/services/dock-pane-registry";
 import { runPaneCommand } from "@/features/layout/services/pane-commands";
 import { showProjectTool } from "@/features/layout/services/project-tools";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { useBufferStore } from "@/features/editor/stores/buffer.store";
 import { useRepositoryStore } from "@/features/git/stores/git-repository.store";
-import { GITHUB_CONNECTION_URL } from "@/features/github/services/github-token-service";
+import { useUIState } from "@/features/layout/stores/ui-state.store";
 import { useGitHubStore } from "@/features/github/stores/github.store";
 import { showToast } from "@/utils/toast";
 import { useSettingsStore } from "@/features/settings/stores/settings.store";
@@ -84,5 +83,5 @@ export async function checkGitHubAuthentication(): Promise<void> {
 }
 
 export function connectGitHubAccount(): void {
-  void openUrl(GITHUB_CONNECTION_URL);
+  useUIState.getState().openSettings("git", "GitHub Account");
 }

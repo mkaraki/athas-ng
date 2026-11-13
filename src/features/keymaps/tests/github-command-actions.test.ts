@@ -11,7 +11,6 @@ vi.hoisted(() => {
   });
 });
 
-import { GITHUB_CONNECTION_URL } from "@/features/github/services/github-token-service";
 import { useGitHubStore } from "@/features/github/stores/github.store";
 import { useUIState } from "@/features/layout/stores/ui-state.store";
 import { useWorkbenchSidebarStore } from "@/features/layout/stores/workbench-sidebar.store";
@@ -107,9 +106,9 @@ describe("GitHub palette actions", () => {
     });
   });
 
-  it("opens the GitHub connection page", () => {
-    mocks.openUrl.mockResolvedValue(undefined);
+  it("opens local GitHub credential settings", () => {
+    const openSettings = vi.spyOn(useUIState.getState(), "openSettings");
     connectGitHubAccount();
-    expect(mocks.openUrl).toHaveBeenCalledWith(GITHUB_CONNECTION_URL);
+    expect(openSettings).toHaveBeenCalledWith("git", "GitHub Account");
   });
 });

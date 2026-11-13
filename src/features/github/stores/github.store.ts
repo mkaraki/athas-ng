@@ -2,10 +2,8 @@ import { commands } from "@/bindings/commands";
 import { create } from "zustand";
 import { combine } from "zustand/middleware";
 import type { PRFilter } from "../types/github.types";
-import { syncGitHubTokenFromAccount } from "../services/github-token-service";
 import {
   AUTH_CACHE_TTL_MS,
-  getGitHubAccountStatus,
   getGitHubErrorMessage,
   isFresh,
 } from "../services/github-pr-store-service";
@@ -83,54 +81,11 @@ const useGitHubStoreBase = create(
               authError: null,
             });
           } else {
-            let githubAccountStatus = get().githubAccountStatus;
-
-            if (status === "notAuthenticated") {
-              try {
-                const syncResult = await syncGitHubTokenFromAccount();
-                githubAccountStatus = getGitHubAccountStatus(syncResult.status);
-
-                if (syncResult.status === "synced") {
-                  const syncedStatus = await commands.githubCheckAuth();
-
-                  if (syncedStatus === "authenticated") {
-                    const user = await commands.githubGetCurrentUser();
-                    set({
-                      isAuthenticated: true,
-                      isCheckingAuth: false,
-                      authStatus: syncedStatus,
-                      githubAccountStatus,
-                      currentUser: user,
-                      authError: null,
-                    });
-                    authCheckedAt = Date.now();
-                    return;
-                  }
-
-                  set({
-                    isAuthenticated: false,
-                    isCheckingAuth: false,
-                    authStatus: syncedStatus,
-                    githubAccountStatus,
-                    currentUser: null,
-                    authError:
-                      "A GitHub token was synced from your Athas account, but GitHub rejected it.",
-                  });
-                  authCheckedAt = Date.now();
-                  return;
-                }
-              } catch (error) {
-                const message = getGitHubErrorMessage(error);
-                console.error("Failed to sync GitHub account token:", error);
-                set({ authError: `Failed to sync GitHub account token: ${message}` });
-              }
-            }
-
             set({
               isAuthenticated: false,
               isCheckingAuth: false,
               authStatus: status,
-              githubAccountStatus,
+              githubAccountStatus: "notConnected",
               currentUser: null,
               authError:
                 get().authError ??

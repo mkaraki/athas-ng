@@ -2,7 +2,6 @@ import { registerExtensionPaneViews } from "@/extensions/ui/services/extension-p
 import { registerAiEditorFeatures } from "@/features/ai/services/ai-editor-features";
 import { registerAiViews } from "@/features/ai/services/ai-views";
 import { registerBrowserViews } from "@/features/browser/services/browser-views";
-import { registerCollaborationViews } from "@/features/collaboration/services/collaboration-views";
 import { registerDatabaseViews } from "@/features/database/services/database-views";
 import { registerDiagnosticsViews } from "@/features/diagnostics/services/diagnostics-views";
 import { registerDockerViews } from "@/features/docker/services/docker-views";
@@ -16,7 +15,6 @@ import { registerReferencesViews } from "@/features/references/services/referenc
 import { registerSettingsViews } from "@/features/settings/services/settings-views";
 import { registerTerminalViews } from "@/features/terminal/services/terminal-views";
 import { registerViewerViews } from "@/features/viewer/services/viewer-views";
-import { registerWorkspaceViews } from "@/features/workspace/team/services/workspace-views";
 
 let registered = false;
 
@@ -41,11 +39,9 @@ export function registerWorkbenchContributions() {
   registerReferencesViews();
   registerOnboardingViews();
   registerViewerViews();
-  registerWorkspaceViews();
   registerExtensionPaneViews();
   registerFileExplorerViews();
   registerDockerViews();
-  registerCollaborationViews();
   registerAiEditorFeatures();
   registerGitHubLinkedAccount();
 }

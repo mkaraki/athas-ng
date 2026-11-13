@@ -395,6 +395,8 @@ function normalizeAISkills(skills: Settings["aiSkills"]): Settings["aiSkills"] {
 
 function normalizeAISettings(settings: Settings): Settings {
   const normalizedSettings = { ...settings };
+  if (normalizedSettings.githubTokenSource === "athas")
+    normalizedSettings.githubTokenSource = "auto";
   const requestedProviderId =
     typeof normalizedSettings.aiProviderId === "string"
       ? normalizedSettings.aiProviderId.trim()

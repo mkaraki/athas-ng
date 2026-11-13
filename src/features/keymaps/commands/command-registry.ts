@@ -9,7 +9,6 @@ import { gitCommands } from "./git-commands";
 import { developerCommands, lspCommands } from "./lsp-commands";
 import { navigationCommands } from "./navigation-commands";
 import { paneCommands } from "./pane-commands";
-import { previewCommands } from "./preview-commands";
 import { settingsCommands } from "./settings-commands";
 import { terminalCommands } from "./terminal-commands";
 import { databaseCommands, viewCommands } from "./view-commands";
@@ -24,7 +23,6 @@ import { windowCommands } from "./window-commands";
 export const builtInCommands: Command[] = [
   ...fileCommands,
   ...browserCommands,
-  ...previewCommands,
   ...editCommands,
   ...terminalCommands,
   ...lspCommands,

@@ -149,6 +149,12 @@ afterEach(async () => {
 });
 
 describe("settings workbench view", () => {
+  it("does not offer account or sharing navigation", async () => {
+    await render();
+    for (const id of ["account", "sharing", "enterprise", "collaboration"]) {
+      expect(document.getElementById(`settings-tab-${id}`)).toBeNull();
+    }
+  });
   it("opens the general page first and switches pages from the navigation", async () => {
     await render();
 
@@ -167,8 +173,6 @@ describe("settings workbench view", () => {
   });
 
   it.each([
-    ["account", "Account page"],
-    ["sharing", "Sharing page"],
     ["appearance", "Appearance page"],
     ["notifications", "Notifications page"],
     ["editor", "Editor page"],

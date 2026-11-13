@@ -419,7 +419,6 @@ export const TextIndentIcon = createIconComponent(
 export const TranslateIcon = createIconComponent(Nucleo.IconLanguageOutline18, "TranslateIcon");
 export const TrashIcon = createIconComponent(Nucleo.IconTrashOutline18, "TrashIcon");
 export const UploadIcon = createIconComponent(Nucleo.IconUploadOutline18, "UploadIcon");
-export const UserCircleIcon = createIconComponent(Nucleo.IconCircleUserOutline18, "UserCircleIcon");
 export const UserIcon = createIconComponent(Nucleo.IconUserOutline18, "UserIcon");
 export const UsersIcon = createIconComponent(Nucleo.IconUsersOutline18, "UsersIcon");
 export const WarningCircleIcon = createIconComponent(

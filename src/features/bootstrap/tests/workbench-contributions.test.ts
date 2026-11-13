@@ -38,7 +38,6 @@ const VIEW_TYPES: PaneContentType[] = [
   "continuousAgents",
   "acpInspector",
   "agentChanges",
-  "workspaces",
   "settings",
   "extensions",
   "extension",
@@ -64,10 +63,8 @@ describe("workbench contributions", () => {
       "git",
       "github-prs",
       "docker",
-      "workspaces",
       "databases",
       "files",
-      "collaboration",
     ]);
   });
 

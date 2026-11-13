@@ -25,7 +25,6 @@ export const commandPaletteOrder: CommandPaletteSlot[] = [
   "workbench.zoomReset",
   "browser.newTab",
   "browser.openUrl",
-  "preview.shareLocalServer",
   "terminal.new",
   "terminal.generateName",
   "terminal.find",
