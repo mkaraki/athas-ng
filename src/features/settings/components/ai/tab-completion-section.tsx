@@ -8,11 +8,7 @@ import Section, { SettingRow } from "../settings-section";
 
 const AUTOMATIC = "Automatic";
 
-/**
- * Tab completion has its own model. On Automatic it uses Athas's Tab model, or the default model
- * when it runs locally or when Athas is not available, so a local setup never sends code to Athas
- * without the user choosing it.
- */
+/** Tab completion follows a local Ollama model or its own explicit local choice. */
 export function TabCompletionSection() {
   const model = useTabCompletionModel();
   const updateSetting = useSettingsStore((store) => store.actions.updateSetting);

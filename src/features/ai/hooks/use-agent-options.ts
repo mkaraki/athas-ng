@@ -26,10 +26,8 @@ export function useAgentOptions(currentAgentId: AgentType) {
   );
   return {
     options,
-    isLoading: [agents.status, codex.status].some(
-      (status) => status === "idle" || status === "loading",
-    ),
-    loadError: [agents.error, codex.error].filter(Boolean).join("\n") || null,
+    isLoading: [agents.status].some((status) => status === "idle" || status === "loading"),
+    loadError: [agents.error].filter(Boolean).join("\n") || null,
     refresh: () => actions.refresh(true),
     runAgentAction: actions.runAgentAction,
   };

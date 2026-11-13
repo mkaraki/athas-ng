@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
 import { defaultIntelligencePreferences } from "@/features/ai/intelligence/lib/intelligence-preferences";
-import type { HostedUsageState } from "@/features/ai/services/hosted-usage";
 import {
   AI_FEATURE_MODEL_OVERRIDES,
   countTaskOverrides,
@@ -9,7 +8,6 @@ import {
   withDefaultConnection,
   withTaskConnection,
 } from "../services/ai-model-preferences";
-import { describeIncludedCredit } from "../services/athas-credit";
 
 const openai = { providerId: "openai", modelId: "gpt-test" };
 const ollama = { providerId: "ollama", modelId: "llama3" };
@@ -25,7 +23,7 @@ describe("AI model preferences", () => {
         personalConnection: openai,
         personalConnectionIsLocal: false,
       }),
-    ).toEqual({ providerId: "athas", modelId: "auto" });
+    ).toEqual({ providerId: "ollama", modelId: "" });
     expect(
       getEffectiveDefaultConnection({
         preferences,
@@ -33,7 +31,7 @@ describe("AI model preferences", () => {
         personalConnection: openai,
         personalConnectionIsLocal: false,
       }),
-    ).toEqual(openai);
+    ).toEqual({ providerId: "ollama", modelId: "" });
     expect(
       getEffectiveDefaultConnection({
         preferences,
@@ -44,10 +42,9 @@ describe("AI model preferences", () => {
     ).toEqual(ollama);
   });
 
-  it("treats Athas as unavailable without a plan that includes it", () => {
-    expect(isConnectionAvailable({ providerId: "athas", modelId: "auto" }, false)).toBe(false);
-    expect(isConnectionAvailable({ providerId: "athas", modelId: "auto" }, true)).toBe(true);
-    expect(isConnectionAvailable(ollama, false)).toBe(true);
+  it("treats removed providers as unavailable", () => {
+    expect(isConnectionAvailable({ providerId: "athas", modelId: "auto" })).toBe(false);
+    expect(isConnectionAvailable(ollama)).toBe(true);
   });
 
   it("ignores per-feature choices when describing the default", () => {
@@ -64,7 +61,7 @@ describe("AI model preferences", () => {
         personalConnection: openai,
         personalConnectionIsLocal: false,
       }),
-    ).toEqual(openai);
+    ).toEqual({ providerId: "ollama", modelId: "" });
   });
 
   it("sets and clears a feature's model without touching the others", () => {
@@ -92,44 +89,5 @@ describe("AI model preferences", () => {
 
     expect(tasks).not.toContain("autocomplete");
     expect(countTaskOverrides(preferences, tasks)).toBe(1);
-  });
-});
-
-describe("Athas included credit", () => {
-  const usage: HostedUsageState = {
-    usedPercent: 25,
-    level: "ok",
-    remainingCents: 750,
-    usedCents: 250,
-    pendingCents: 0,
-    allowanceCents: 1000,
-    walletBalanceCents: null,
-    periodEnd: new Date("2026-10-01T12:00:00Z"),
-    usageMarkup: 1.35,
-  };
-
-  it("says how much is left and when it resets", () => {
-    expect(describeIncludedCredit(usage)).toBe("$7.50 of $10.00 left · resets Oct 1");
-  });
-
-  it("says usage continues from the balance once included credit is used up", () => {
-    expect(
-      describeIncludedCredit({
-        ...usage,
-        level: "included_exhausted",
-        remainingCents: 0,
-        walletBalanceCents: 312.5,
-        periodEnd: null,
-      }),
-    ).toBe("Included credit used, on balance");
-    expect(
-      describeIncludedCredit({
-        ...usage,
-        level: "exhausted",
-        remainingCents: 0,
-        walletBalanceCents: 0,
-        periodEnd: null,
-      }),
-    ).toBe("Included credit used, add credit to continue");
   });
 });

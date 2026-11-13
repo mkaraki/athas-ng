@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { AgentAllowedActionsSettings } from "@/features/ai/components/permissions/agent-allowed-actions-settings";
-import { CodexSettings } from "@/features/ai/integrations/codex/codex-settings";
 import {
   MAX_INTELLIGENCE_AGENT_STEPS,
   MIN_INTELLIGENCE_AGENT_STEPS,
@@ -14,34 +13,28 @@ import { useSettingsStore } from "@/features/settings/stores/settings.store";
 import NumberInput from "@/ui/number-input";
 import Switch from "@/ui/switch";
 import Textarea from "@/ui/textarea";
-import { AthasPlanSection } from "../ai/athas-plan-section";
-import { CustomEndpointSection } from "../ai/custom-endpoint-section";
 import { AgentsSummarySection, McpServersSummarySection } from "../ai/customize-summary-section";
 import { DefaultModelSection } from "../ai/default-model-section";
 import { FeatureModelsSection } from "../ai/feature-models-section";
 import { OllamaSection } from "../ai/ollama-section";
-import { ProviderKeysSection } from "../ai/provider-keys-section";
 import { TabCompletionSection } from "../ai/tab-completion-section";
 import Section, { SettingsView, SettingRow, SettingBlock } from "../settings-section";
 
-/** Settings > AI: the Athas plan and the model everything uses unless told otherwise. */
+/** Settings > AI: the model everything uses unless told otherwise. */
 export function AIOverviewSettings() {
   return (
     <SettingsView>
-      <AthasPlanSection />
       <DefaultModelSection />
       <FeatureModelsSection />
     </SettingsView>
   );
 }
 
-/** Settings > AI > Models & keys: where models come from besides Athas. */
+/** Settings > AI > Models & keys: local model connections. */
 export function AIModelsSettings() {
   return (
     <SettingsView>
-      <ProviderKeysSection />
       <OllamaSection />
-      <CustomEndpointSection />
     </SettingsView>
   );
 }
@@ -184,7 +177,6 @@ export function AIAgentsSettings() {
   return (
     <SettingsView>
       <AgentsSummarySection />
-      <CodexSettings />
       <ClaudeCodeSection />
       <AgentBehaviorSection />
       <AgentInstructionsSection />

@@ -1,6 +1,5 @@
 import {
   ArrowsClockwiseIcon,
-  CloudIcon,
   ArrowsLeftRightIcon,
   ChatBubbleTextIcon,
   CheckIcon,
@@ -18,8 +17,6 @@ import {
   WrenchIcon,
   XIcon,
 } from "@/ui/icons";
-import { hasProductCapability } from "@/features/auth/services/product-capabilities";
-import { useAuthStore } from "@/features/auth/stores/auth.store";
 import { useBufferStore } from "@/features/editor/stores/buffer.store";
 import { useUIState } from "@/features/layout/stores/ui-state.store";
 import { openCustomize } from "@/features/ai/customize/services/open-customize";
@@ -228,20 +225,6 @@ export const aiCommands: Command[] = [
     palette: true,
     execute: () => {
       useBufferStore.getState().actions.openContinuousAgentsBuffer();
-    },
-  },
-  {
-    id: "ai.openCloudAgents",
-    title: "AI: Cloud Agents",
-    category: "AI",
-    description: "Start an agent session that runs in the cloud and opens a pull request",
-    icon: <CloudIcon />,
-    when: () => hasProductCapability(useAuthStore.getState().subscription, "cloudAgents"),
-    palette: true,
-    execute: async () => {
-      const { openNewCloudAgentChat } =
-        await import("@/features/ai/cloud-agents/services/cloud-session");
-      openNewCloudAgentChat();
     },
   },
   {

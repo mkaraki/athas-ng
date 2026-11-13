@@ -5,24 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import { ModelConnectionPicker } from "../components/selectors/model-connection-picker";
 
 const state = vi.hoisted(() => ({
-  keys: new Map([
-    ["openai", true],
-    ["ollama", true],
-  ]),
-  providers: [
-    { id: "athas", name: "Athas", models: [] },
-    { id: "openai", name: "OpenAI", models: [{ id: "gpt-test", name: "GPT Test" }] },
-    { id: "anthropic", name: "Anthropic", models: [] },
-    { id: "ollama", name: "Ollama", models: [] },
-  ],
-  models: {
-    athas: [
-      { id: "auto", name: "Automatic" },
-      { id: "moonshotai/kimi-k2.6", name: "Kimi K2.6" },
-    ],
-    openai: [{ id: "gpt-test", name: "GPT Test" }],
-    ollama: [{ id: "llama3", name: "llama3" }],
-  } as Record<string, { id: string; name: string }[]>,
+  keys: new Map([["ollama", true]]),
+  providers: [{ id: "ollama", name: "Ollama", models: [] }],
+  models: { ollama: [{ id: "llama3", name: "llama3" }] } as Record<
+    string,
+    { id: string; name: string }[]
+  >,
 }));
 vi.mock("@tauri-apps/api/webviewWindow", () => ({
   getCurrentWebviewWindow: () => ({ label: "main" }),
@@ -53,7 +41,7 @@ async function render(props: Partial<Parameters<typeof ModelConnectionPicker>[0]
     root.render(
       <ModelConnectionPicker
         aria-label="Default model"
-        value={{ providerId: "athas", modelId: "auto" }}
+        value={{ providerId: "ollama", modelId: "llama3" }}
         onChange={onChange}
         {...props}
       />,
@@ -92,9 +80,9 @@ afterEach(async () => {
 describe("settings model picker", () => {
   it("names the current choice and offers the same connections as the composer", async () => {
     await render();
-    expect(trigger().textContent).toBe("Athas Automatic");
+    expect(trigger().textContent).toBe("llama3");
     await act(async () => trigger().click());
-    expect(sections()).toEqual(["Athas", "OpenAI", "Ollama"]);
+    expect(sections()).toEqual(["Ollama"]);
   });
 
   it("chooses a local model from its connection", async () => {
@@ -116,10 +104,10 @@ describe("settings model picker", () => {
     expect(inherit.getAttribute("aria-checked")).toBe("true");
 
     await render({
-      value: { providerId: "openai", modelId: "gpt-test" },
+      value: { providerId: "ollama", modelId: "llama3" },
       inheritLabel: "Same as default",
     });
-    expect(trigger().getAttribute("title")).toBe("GPT Test via OpenAI");
+    expect(trigger().getAttribute("title")).toBe("llama3 via Ollama");
     await act(async () =>
       rows()
         .find((row) => row.textContent === "Same as default")!
@@ -133,21 +121,21 @@ describe("settings model picker", () => {
     expect(trigger().textContent).toBe("Automatic");
   });
 
-  it("offers Athas's one Tab model instead of its chat catalog for Tab completion", async () => {
+  it("offers local models for Tab completion", async () => {
     await render({ value: null, inheritLabel: "Automatic", purpose: "completion" });
     expect(trigger().textContent).toBe("Automatic");
     await act(async () => trigger().click());
-    expect(sections()).toEqual(["Athas", "OpenAI", "Ollama"]);
-    expect(rows().map((row) => row.textContent)).toContain("Athas Tab model");
+    expect(sections()).toEqual(["Ollama"]);
+    expect(rows().map((row) => row.textContent)).toContain("llama3");
     expect(rows().some((row) => row.textContent?.includes("Kimi"))).toBe(false);
     await act(async () =>
       rows()
-        .find((row) => row.textContent?.startsWith("Athas Tab model"))!
+        .find((row) => row.textContent?.startsWith("llama3"))!
         .click(),
     );
-    expect(onChange).toHaveBeenCalledExactlyOnceWith({ providerId: "athas", modelId: "auto" });
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({ providerId: "ollama", modelId: "llama3" });
 
-    await render({ value: { providerId: "athas", modelId: "auto" }, purpose: "completion" });
-    expect(trigger().textContent).toBe("Athas Tab model");
+    await render({ value: { providerId: "ollama", modelId: "llama3" }, purpose: "completion" });
+    expect(trigger().textContent).toBe("llama3");
   });
 });

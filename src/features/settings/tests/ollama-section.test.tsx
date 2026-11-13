@@ -55,23 +55,12 @@ let storedToken: string | null;
 const body = () => within(document.body);
 const baseUrl = () => useSettingsStore.getState().settings.ollamaBaseUrl;
 const addressInput = () => body().getByLabelText("Ollama server address") as HTMLInputElement;
-const status = () =>
-  document
-    .querySelector('[data-setting-row-label="Server address"] [role="img"]')!
-    .getAttribute("aria-label");
+const status = () => rowDescription("Server address");
 
 function rowDescription(label: string) {
   const row = document.querySelector(`[data-setting-row-label="${label}"]`)!;
   const id = row.getAttribute("aria-describedby");
   return id ? document.getElementById(id)?.textContent : null;
-}
-
-function button(text: string) {
-  const match = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
-    (element) => element.textContent?.trim() === text,
-  );
-  if (!match) throw new Error(`No button labelled ${text}`);
-  return match;
 }
 
 async function flush() {
@@ -136,7 +125,7 @@ describe("Ollama settings", () => {
   it("normalizes and saves a LAN address, then checks the server", async () => {
     mocks.reachable.add("http://192.168.1.20:11434");
     await render();
-    expect(status()).toBe("Not checked");
+    expect(status()).toBe("Local Ollama server");
 
     await commitAddress("192.168.1.20:11434/");
 
@@ -151,7 +140,7 @@ describe("Ollama settings", () => {
     await render();
 
     await act(async () => {
-      fireEvent.change(addressInput(), { target: { value: "gpu.example.com:11434" } });
+      fireEvent.change(addressInput(), { target: { value: "gpu.lan:11434" } });
     });
     expect(baseUrl()).toBe("http://localhost:11434");
 
@@ -160,20 +149,10 @@ describe("Ollama settings", () => {
     });
     await flush();
 
-    expect(baseUrl()).toBe("http://gpu.example.com:11434");
+    expect(baseUrl()).toBe("http://gpu.lan:11434");
     expect(rowDescription("Server address")).toBe(
-      "Could not connect. Is Ollama running at this address?",
+      "Use a local address and check that Ollama is running.",
     );
-  });
-
-  it("warns that a reachable remote server is outside the local network", async () => {
-    mocks.reachable.add("http://gpu.example.com:11434");
-    await render();
-
-    await commitAddress("gpu.example.com:11434");
-
-    expect(status()).toBe("Connected");
-    expect(rowDescription("Server address")).toBe("Runs outside your local network");
   });
 
   it("rejects an address that is not an http endpoint without saving it", async () => {
@@ -182,7 +161,7 @@ describe("Ollama settings", () => {
     await commitAddress("ftp://ollama.lan");
 
     expect(baseUrl()).toBe("http://localhost:11434");
-    expect(status()).toBe("Not reachable");
+    expect(status()).toBe("Use a local address and check that Ollama is running.");
     expect(addressInput().getAttribute("aria-invalid")).toBe("true");
     expect(mocks.requests).toEqual([]);
   });
@@ -202,99 +181,12 @@ describe("Ollama settings", () => {
     expect(body().queryByRole("button", { name: "Reset Ollama address to default" })).toBeNull();
   });
 
-  it("switches to Ollama Cloud, saves a key, and returns to the local server", async () => {
-    useSettingsStore.setState((state) => ({
-      settings: { ...state.settings, ollamaBaseUrl: "http://10.0.0.8:11434" },
-    }));
-    mocks.reachable.add("https://ollama.com");
+  it("rejects cloud addresses and offers no cloud or API key controls", async () => {
     await render();
+    await commitAddress("https://ollama.com");
+    expect(baseUrl()).toBe("http://localhost:11434");
+    expect(mocks.requests).toEqual([]);
+    expect(body().queryByRole("button", { name: "Cloud" })).toBeNull();
     expect(body().queryByLabelText("Ollama API key")).toBeNull();
-
-    await click(button("Cloud"));
-    expect(baseUrl()).toBe("https://ollama.com");
-    expect(rowDescription("API key")).toContain("Get a key at");
-    expect(button("Save").disabled).toBe(true);
-
-    await act(async () => {
-      fireEvent.change(body().getByLabelText("Ollama API key"), {
-        target: { value: "  sk-ollama  " },
-      });
-    });
-    await act(async () => {
-      fireEvent.keyDown(body().getByLabelText("Ollama API key"), { key: "Enter" });
-    });
-    await flush();
-
-    expect(storedToken).toBe("sk-ollama");
-    expect(mocks.toasts).toContainEqual({ type: "success", message: "Ollama API key saved" });
-    expect(rowDescription("API key")).toBe("Configured");
-    expect(last(mocks.requests)).toEqual({
-      url: "https://ollama.com/api/tags",
-      authorization: "Bearer sk-ollama",
-    });
-    expect(status()).toBe("Connected");
-
-    await click(button("Local"));
-    expect(baseUrl()).toBe("http://10.0.0.8:11434");
-    expect(last(mocks.requests)).toEqual({
-      url: "http://10.0.0.8:11434/api/tags",
-      authorization: "Bearer sk-ollama",
-    });
-  });
-
-  it("explains an unreachable Ollama Cloud", async () => {
-    await render();
-
-    await click(button("Cloud"));
-
-    expect(status()).toBe("Not reachable");
-    expect(rowDescription("Server address")).toBe(
-      "Could not reach Ollama Cloud. Check your key and connection.",
-    );
-  });
-
-  it("removes a stored key", async () => {
-    storedToken = "sk-old";
-    await render();
-
-    expect(rowDescription("API key")).toBe("Configured");
-    await click(button("Reset Key"));
-
-    expect(storedToken).toBeNull();
-    expect(mocks.toasts).toContainEqual({ type: "success", message: "Ollama API key removed" });
-    expect(document.querySelector('[data-setting-row-label="API key"]')).toBeNull();
-  });
-
-  it("reports key storage failures", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    storedToken = "sk-old";
-    vi.mocked(commands.removeAiProviderToken).mockRejectedValueOnce(new Error("keychain locked"));
-    await render();
-
-    await click(button("Reset Key"));
-    expect(mocks.toasts).toContainEqual({
-      type: "error",
-      message: "Failed to remove Ollama API key",
-    });
-    expect(rowDescription("API key")).toBe("Configured");
-
-    useSettingsStore.setState((state) => ({
-      settings: { ...state.settings, ollamaBaseUrl: "https://ollama.com" },
-    }));
-    storedToken = null;
-    await act(async () => root.unmount());
-    root = createRoot(container);
-    await render();
-    vi.mocked(commands.storeAiProviderToken).mockRejectedValueOnce(new Error("keychain locked"));
-    await act(async () => {
-      fireEvent.change(body().getByLabelText("Ollama API key"), { target: { value: "sk-new" } });
-    });
-    await click(button("Save"));
-
-    expect(mocks.toasts).toContainEqual({
-      type: "error",
-      message: "Failed to save Ollama API key",
-    });
-    expect(storedToken).toBeNull();
   });
 });

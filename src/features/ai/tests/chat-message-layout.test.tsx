@@ -14,7 +14,7 @@ function message(overrides: Partial<Message>): Message {
 }
 
 describe("ChatMessage layout", () => {
-  it("offers billing recovery for a previously saved payment error", () => {
+  it("offers model settings for a previously saved payment error", () => {
     const markup = renderToStaticMarkup(
       <ChatMessage
         message={message({
@@ -31,7 +31,7 @@ details:
         isLastMessage
       />,
     );
-    expect(markup).toContain("Manage billing");
+    expect(markup).toContain("Configure models");
     expect(markup).toContain("Completed the first step.");
   });
   it("renders the user message as an end-aligned bubble without an avatar", () => {

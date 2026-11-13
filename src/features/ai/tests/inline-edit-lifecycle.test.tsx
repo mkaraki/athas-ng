@@ -12,7 +12,7 @@ import { useIntelligenceSettingsStore } from "@/features/ai/intelligence/stores/
 
 vi.mock("@/features/ai/stores/ai-chat.store", () => {
   const state = {
-    providerApiKeys: new Map([["openai", true]]),
+    providerApiKeys: new Map([["ollama", true]]),
     actions: { checkAllProviderApiKeys: vi.fn() },
   };
   return {
@@ -23,7 +23,7 @@ vi.mock("@/features/ai/stores/ai-chat.store", () => {
 });
 vi.mock("@/features/settings/stores/settings.store", () => {
   const state = {
-    settings: { aiProviderId: "openai", aiModelId: "test-model" },
+    settings: { aiProviderId: "ollama", aiModelId: "test-model" },
     actions: { updateSetting: vi.fn() },
   };
   return { useSettingsStore: (selector: (value: typeof state) => unknown) => selector(state) };
@@ -354,18 +354,18 @@ describe("Inline edit request ownership", () => {
 
 describe("Inline edit model", () => {
   it("shows the connection it runs on and saves a new choice for inline edit only", async () => {
-    expect(picker.props?.value).toEqual({ providerId: "openai", modelId: "test-model" });
-    await act(async () => picker.props?.onChange({ providerId: "athas", modelId: "auto" }));
+    expect(picker.props?.value).toEqual({ providerId: "ollama", modelId: "test-model" });
+    await act(async () => picker.props?.onChange({ providerId: "ollama", modelId: "auto" }));
     expect(useIntelligenceSettingsStore.getState().preferences.tasks["inline-edit"]).toEqual({
-      providerId: "athas",
+      providerId: "ollama",
       modelId: "auto",
     });
-    expect(picker.props?.value).toEqual({ providerId: "athas", modelId: "auto" });
+    expect(picker.props?.value).toEqual({ providerId: "ollama", modelId: "auto" });
     await act(async () => picker.props?.onChange(null));
     expect(
       useIntelligenceSettingsStore.getState().preferences.tasks["inline-edit"],
     ).toBeUndefined();
-    expect(picker.props?.value).toEqual({ providerId: "openai", modelId: "test-model" });
+    expect(picker.props?.value).toEqual({ providerId: "ollama", modelId: "test-model" });
   });
 });
 

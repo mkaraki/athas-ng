@@ -60,7 +60,7 @@ function createHost(chatId: string): AgentTurnHost & { finishRun: ReturnType<typ
   return {
     surfaceChatId: chatId,
     isBoundToChat: true,
-    fallbackProviderId: "athas",
+    fallbackProviderId: "ollama",
     outputStyle: "default",
     allProjectFiles: [],
     selectedFilesPaths: new Set(),
@@ -77,18 +77,18 @@ function createHost(chatId: string): AgentTurnHost & { finishRun: ReturnType<typ
   };
 }
 
-function hostedChat(messages: Message[] = []) {
+function localChat(messages: Message[] = []) {
   const actions = useAIChatStore.getState().actions;
   const chatId = actions.createNewChat("custom");
   useAIChatStore.setState((state) => {
     const chat = state.chats.find((candidate) => candidate.id === chatId)!;
-    chat.providerId = "athas";
+    chat.providerId = "ollama";
     chat.modelId = "auto";
     chat.messageCount = messages.length;
     state.messagesByChat[chatId] = messages;
   });
   useAIChatStore.setState({
-    providerApiKeys: new Map(useAIChatStore.getState().providerApiKeys).set("athas", true),
+    providerApiKeys: new Map(useAIChatStore.getState().providerApiKeys).set("ollama", true),
   });
   return chatId;
 }
@@ -104,7 +104,7 @@ beforeEach(() => {
 
 describe("agent turn runner", () => {
   it("streams into the assistant message and reports usage and cost", async () => {
-    const chatId = hostedChat();
+    const chatId = localChat();
     mocks.stream.mockImplementation(async (...args: StreamArgs) => {
       args[5]("Hello ");
       args[5]("world");
@@ -126,12 +126,12 @@ describe("agent turn runner", () => {
       usage: { inputTokens: 20, outputTokens: 10, costCents: 1.23, steps: 3 },
     });
     expect(host.finishRun).toHaveBeenCalledWith(chatId, expect.any(String), "completed");
-    expect(mocks.scheduleSubscriptionRefresh).toHaveBeenCalledOnce();
+    expect(mocks.scheduleSubscriptionRefresh).not.toHaveBeenCalled();
     expect(host.onFirstExchange).toHaveBeenCalledWith(chatId, "Say hello");
   });
 
   it("hides the follow-up block while streaming and splits it off once per batch", async () => {
-    const chatId = hostedChat();
+    const chatId = localChat();
     const visibleWhileStreaming: string[] = [];
     mocks.stream.mockImplementation(async (...args: StreamArgs) => {
       for (const chunk of ["Do", "ne.", "\n[FOLLOW_UP_", "ACTIONS]\n[", '{"label":"Run tests",']) {
@@ -155,8 +155,8 @@ describe("agent turn runner", () => {
   });
 
   it("runs a turn in the mode of its own chat, not the one the user switched to last", async () => {
-    const planned = hostedChat();
-    const other = hostedChat();
+    const planned = localChat();
+    const other = localChat();
     const { setMode } = useAIChatStore.getState().actions;
     setMode("plan", planned);
     // The user moves to another chat and switches it to Agent while the plan turn waits.
@@ -170,15 +170,15 @@ describe("agent turn runner", () => {
 
     expect(mocks.stream.mock.calls.map((args) => args[15])).toEqual(["plan", "chat"]);
     // A chat that never picked a mode kept the default it had.
-    const untouched = hostedChat();
+    const untouched = localChat();
     expect(useAIChatStore.getState().mode).toBe("chat");
     setMode("ask", other);
     expect(useAIChatStore.getState().modeByChat[untouched]).toBe("chat");
     expect(useAIChatStore.getState().mode).toBe("ask");
   });
 
-  it("stores a structured error beside the legacy block and refreshes credits after a 402", async () => {
-    const chatId = hostedChat();
+  it("stores a structured error beside the legacy block and does not refresh account credits", async () => {
+    const chatId = localChat();
     mocks.stream.mockImplementation(async (...args: StreamArgs) => {
       args[7]('athas API error: 402|||{"error":{"code":"allowance_exhausted"}}');
     });
@@ -190,11 +190,11 @@ describe("agent turn runner", () => {
     expect(message.content).toContain("[ERROR_BLOCK]");
     expect(message.error).toMatchObject({ code: "allowance_exhausted", status: 402 });
     expect(host.finishRun).toHaveBeenCalledWith(chatId, expect.any(String), "failed");
-    expect(mocks.refreshSubscription).toHaveBeenCalledOnce();
+    expect(mocks.refreshSubscription).not.toHaveBeenCalled();
     expect(mocks.recordAiFailure).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: "builtin",
-        providerId: "athas",
+        providerId: "ollama",
         code: "allowance_exhausted",
         status: 402,
         phase: "provider",
@@ -204,7 +204,7 @@ describe("agent turn runner", () => {
   });
 
   it("keeps earlier error blocks out of the history sent to the model", async () => {
-    const chatId = hostedChat([
+    const chatId = localChat([
       { id: "u1", role: "user", content: "First", timestamp: new Date() },
       {
         id: "a1",
@@ -224,9 +224,7 @@ describe("agent turn runner", () => {
   });
 
   it("marks a retried turn in its failure signal", async () => {
-    const chatId = hostedChat([
-      { id: "u1", role: "user", content: "Build", timestamp: new Date() },
-    ]);
+    const chatId = localChat([{ id: "u1", role: "user", content: "Build", timestamp: new Date() }]);
     mocks.stream.mockImplementation(async (...args: StreamArgs) => {
       args[6]({ outcome: "completed" });
     });

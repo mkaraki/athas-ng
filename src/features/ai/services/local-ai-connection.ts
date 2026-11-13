@@ -1,52 +1,11 @@
 import type { Settings } from "@/features/settings/types/settings.types";
-import { resolveCustomProviderBaseUrl } from "./custom-provider-config";
 import {
   isOllamaCloudUrl,
   resolveOllamaBaseUrl,
 } from "@/features/settings/services/ollama-endpoint";
 
-const LOCAL_HOST_SUFFIXES = [".localhost", ".local", ".lan", ".home.arpa", ".internal"];
-
-function isPrivateIPv4(hostname: string) {
-  const parts = hostname.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255))
-    return false;
-  const [a, b] = parts;
-  return (
-    a === 127 ||
-    a === 10 ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    (a === 169 && b === 254) ||
-    // Carrier-grade NAT space, which Tailscale and similar private networks use.
-    (a === 100 && b >= 64 && b <= 127) ||
-    hostname === "0.0.0.0"
-  );
-}
-
-function isPrivateIPv6(hostname: string) {
-  const address = hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  return (
-    address === "::1" ||
-    address.startsWith("fc") ||
-    address.startsWith("fd") ||
-    /^fe[89ab]/.test(address)
-  );
-}
-
-/** Whether `url` points at this machine or the local network, so requests to it stay private. */
-export function isLocalEndpointUrl(url: string): boolean {
-  let hostname: string;
-  try {
-    hostname = new URL(url).hostname.toLowerCase();
-  } catch {
-    return false;
-  }
-  if (!hostname) return false;
-  if (hostname === "localhost") return true;
-  if (LOCAL_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix))) return true;
-  return isPrivateIPv4(hostname) || (hostname.includes(":") && isPrivateIPv6(hostname));
-}
+import { isLocalEndpointUrl } from "@/utils/local-endpoint";
+export { isLocalEndpointUrl } from "@/utils/local-endpoint";
 
 type LocalProviderSettings = Pick<
   Settings,
@@ -55,15 +14,12 @@ type LocalProviderSettings = Pick<
 
 /**
  * Whether a provider runs on this machine or the local network: Ollama away from Ollama Cloud,
- * or a custom OpenAI-compatible endpoint on a local host. Prompts sent to it never leave the LAN.
+ * with no direct cloud provider support.
  */
 export function isLocalAiProvider(providerId: string, settings: LocalProviderSettings): boolean {
   if (providerId === "ollama") {
-    const baseUrl = resolveOllamaBaseUrl(settings.ollamaBaseUrl ?? "") ?? "http://localhost:11434";
-    return !isOllamaCloudUrl(baseUrl) && isLocalEndpointUrl(baseUrl);
-  }
-  if (providerId === "custom") {
-    return isLocalEndpointUrl(resolveCustomProviderBaseUrl(settings as Settings));
+    const baseUrl = resolveOllamaBaseUrl(settings.ollamaBaseUrl || "http://localhost:11434");
+    return Boolean(baseUrl && !isOllamaCloudUrl(baseUrl) && isLocalEndpointUrl(baseUrl));
   }
   return false;
 }

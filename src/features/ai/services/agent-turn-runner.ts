@@ -72,7 +72,6 @@ import { useBufferStore } from "@/features/editor/stores/buffer.store";
 import { useSettingsStore } from "@/features/settings/stores/settings.store";
 import type { AiFailurePhase, AiRunKind } from "@/features/telemetry/services/ai-signals";
 import { recordAiFailure } from "@/features/telemetry/services/telemetry";
-import { useAuthStore } from "@/features/auth/stores/auth.store";
 
 export interface AgentTurnRequest {
   content: string;
@@ -174,6 +173,7 @@ function startTurn(request: AgentTurnRequest, host: AgentTurnHost): TurnSetup | 
   const access = getAgentMessageAccess(
     agentId,
     getProviderAccessFromMap(chatProviderId, store.providerApiKeys),
+    chatProviderId,
   );
   if (!trimmedContent && !request.images?.length && !request.editedUserMessageId) return null;
   if (!access.accepted) {
@@ -369,10 +369,6 @@ class AgentTurnStream {
     this.settled = true;
     this.host.finishRun(this.chatId, this.turn.runId, ending);
     this.releaseAbortController();
-    // Hosted turns spend credits; keep the usage ring and balance banner current.
-    if (this.turn.agentId === "custom" && this.turn.providerId === "athas") {
-      useAuthStore.getState().actions.scheduleSubscriptionRefresh();
-    }
   }
 
   private recordFailure(phase: AiFailurePhase, code?: string, status?: number, steps?: number) {
@@ -542,7 +538,6 @@ class AgentTurnStream {
     this.recordFailure(phase, failure.error.code, failure.error.status);
     this.finish("failed");
     // A payment failure means the balance moved; show the real numbers right away.
-    if (failure.error.status === 402) void useAuthStore.getState().actions.refreshSubscription();
   }
 
   onResponseContinuation = () => {

@@ -315,7 +315,7 @@ describe("settings normalization", () => {
     expect(normalized.gitLastPanelMode).toBe("stashes");
   });
 
-  it("preserves custom AI provider settings and mirrors the custom model into chat model", () => {
+  it("migrates the removed custom provider to local selection", () => {
     const normalized = normalizeSettings({
       ...getDefaultSettingsSnapshot(),
       aiProviderId: "custom",
@@ -324,23 +324,23 @@ describe("settings normalization", () => {
       aiCustomModelId: " qwen2.5-coder:7b ",
     });
 
-    expect(normalized.aiProviderId).toBe("custom");
+    expect(normalized.aiProviderId).toBe("ollama");
     expect(normalized.aiCustomBaseUrl).toBe("http://localhost:11434/v1");
     expect(normalized.aiCustomModelId).toBe("qwen2.5-coder:7b");
-    expect(normalized.aiModelId).toBe("qwen2.5-coder:7b");
+    expect(normalized.aiModelId).toBe("");
     expect(normalizeSettingValue("aiCustomBaseUrl", " https://example.test/v1/ ")).toBe(
       "https://example.test/v1",
     );
   });
 
-  it("migrates stale built-in AI model selections to supported models", () => {
+  it("clears model selections from removed providers", () => {
     expect(
       normalizeSettings({
         ...getDefaultSettingsSnapshot(),
         aiProviderId: "anthropic",
         aiModelId: "claude-fable-5",
       }).aiModelId,
-    ).toBe("claude-fable-5-1");
+    ).toBe("");
 
     expect(
       normalizeSettings({
@@ -348,7 +348,7 @@ describe("settings normalization", () => {
         aiProviderId: "deepseek",
         aiModelId: "deepseek-reasoner",
       }).aiModelId,
-    ).toBe("deepseek-v4-pro");
+    ).toBe("");
 
     expect(
       normalizeSettings({
@@ -356,7 +356,7 @@ describe("settings normalization", () => {
         aiProviderId: "mistral",
         aiModelId: "mistral-medium-3-1-25-08",
       }).aiModelId,
-    ).toBe("mistral-medium-3-5");
+    ).toBe("");
 
     expect(
       normalizeSettings({
@@ -364,18 +364,18 @@ describe("settings normalization", () => {
         aiProviderId: "grok",
         aiModelId: "grok-code-fast-1",
       }).aiModelId,
-    ).toBe("grok-build-0.1");
+    ).toBe("");
   });
 
-  it("preserves unknown AI provider selections for extension providers loaded later", () => {
+  it("migrates removed extension providers to local selection", () => {
     const normalized = normalizeSettings({
       ...getDefaultSettingsSnapshot(),
       aiProviderId: "extension-provider",
       aiModelId: "extension-model",
     });
 
-    expect(normalized.aiProviderId).toBe("extension-provider");
-    expect(normalized.aiModelId).toBe("extension-model");
+    expect(normalized.aiProviderId).toBe("ollama");
+    expect(normalized.aiModelId).toBe("");
   });
 
   it("only enables agent notifications for an explicit boolean setting", () => {

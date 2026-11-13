@@ -54,9 +54,7 @@ export async function getIntelligenceConnection(task: IntelligenceTask) {
       : resolveIntelligenceConnection({ ...context, task });
   if (!connection) {
     throw new AutocompleteModelRequiredError(
-      auth.isAuthenticated
-        ? "Choose a model for Tab completion in Settings."
-        : "Sign in to use Athas for Tab completion, or choose a model for it in Settings.",
+      "Choose a local model for Tab completion in Settings.",
     );
   }
   assertIntelligenceConnectionAllowed(connection.providerId, task);
@@ -64,11 +62,12 @@ export async function getIntelligenceConnection(task: IntelligenceTask) {
 }
 
 export function assertIntelligenceConnectionAllowed(providerId: string, task: IntelligenceTask) {
+  if (providerId !== "ollama") throw new Error("Only local Ollama models are supported.");
   const policy = useAuthStore.getState().subscription?.enterprise?.policy;
   if (policy?.managedMode) {
     if (
       !(task === "agent" ? policy.aiChatEnabled : policy.aiCompletionEnabled) ||
-      (providerId !== "athas" && !policy.allowByok)
+      !policy.allowByok
     ) {
       throw new Error("This AI connection is disabled by your organization.");
     }

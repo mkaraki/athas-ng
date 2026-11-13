@@ -1,6 +1,4 @@
 import { ModelConnectionPicker } from "@/features/ai/components/selectors/model-connection-picker";
-import { useConnectedModelProviders } from "@/features/ai/hooks/use-model-providers";
-import { useProviderById } from "@/features/ai/hooks/use-available-providers";
 import type { IntelligenceConnection } from "@/features/ai/intelligence/types/intelligence.types";
 import { useAIModelSettings } from "@/features/ai/hooks/use-ai-model-settings";
 import {
@@ -10,23 +8,7 @@ import {
 import { useSettingsStore } from "@/features/settings/stores/settings.store";
 import { useUIState } from "@/features/layout/stores/ui-state.store";
 import { Button } from "@/ui/button";
-import Select from "@/ui/select";
 import Section, { SettingRow, SettingStatus } from "../settings-section";
-
-function describeDefault(params: {
-  connection: IntelligenceConnection;
-  available: boolean;
-  isLocal: boolean;
-  isAuthenticated: boolean;
-  providerName: string | undefined;
-}) {
-  const { connection, available, isLocal, isAuthenticated, providerName } = params;
-  if (!available) return isAuthenticated ? "Athas models need Pro" : "Choose a model to start";
-  if (connection.providerId === "athas")
-    return connection.modelId === "auto" ? "Picks a model per request" : "Hosted by Athas";
-  if (isLocal) return "Runs locally";
-  return `Your ${providerName ?? connection.providerId} key`;
-}
 
 /**
  * The model new chats and every AI feature except Tab completion use. It saves as it changes and
@@ -34,65 +16,38 @@ function describeDefault(params: {
  */
 export function DefaultModelSection() {
   const state = useAIModelSettings();
-  const { defaultConnection, hasIntelligence, isAuthenticated, locked, error, loading, actions } =
-    state;
+  const { defaultConnection, locked, error, loading, actions } = state;
   const updateSetting = useSettingsStore((store) => store.actions.updateSetting);
-  const provider = useProviderById(defaultConnection.providerId);
-  const keyProviders = useConnectedModelProviders().filter((item) => item.requiresApiKey);
-  const available = isConnectionAvailable(defaultConnection, hasIntelligence);
+  const available = isConnectionAvailable(defaultConnection);
   const openModelsPage = (section?: string) =>
     useUIState.getState().openSettings("ai-models", section);
 
   const changeDefault = (connection: IntelligenceConnection | null) => {
     if (!connection) return;
     actions.change(withDefaultConnection(state.preferences, connection));
-    if (connection.providerId === "custom")
-      void updateSetting("aiCustomModelId", connection.modelId);
     void updateSetting("aiProviderId", connection.providerId);
     void updateSetting("aiModelId", connection.modelId);
   };
 
   return (
     <Section title="Default model">
-      {!available && keyProviders.length === 0 ? (
+      {!available ? (
         <SettingRow
           label="No model yet"
-          description="Use Athas, your own API key, or Ollama"
+          description="Connect Ollama and choose an installed local model"
           activateOnClick={false}
         >
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => openModelsPage("Ollama")}>
               Use Ollama
             </Button>
-            <Button variant="accent" onClick={() => openModelsPage()}>
-              Add API Key
-            </Button>
           </div>
-        </SettingRow>
-      ) : null}
-      {state.scopes.length > 1 ? (
-        <SettingRow label="Settings for" control="select">
-          <Select
-            aria-label="Model settings scope"
-            value={state.scope}
-            options={state.scopes.map((scope) => ({ value: scope.id, label: scope.name }))}
-            disabled={loading}
-            onChange={(scope) => void actions.setScope(scope)}
-            variant="surface"
-            width="full"
-          />
         </SettingRow>
       ) : null}
       <SettingRow
         label="Default model"
         control="select"
-        description={describeDefault({
-          connection: defaultConnection,
-          available,
-          isLocal: state.isLocalProvider(defaultConnection.providerId),
-          isAuthenticated,
-          providerName: provider?.name,
-        })}
+        description={available ? "Runs locally" : "Choose a local model to start"}
       >
         <ModelConnectionPicker
           aria-label="Default model"

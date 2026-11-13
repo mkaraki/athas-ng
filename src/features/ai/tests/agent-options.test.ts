@@ -48,7 +48,7 @@ describe("agent options", () => {
     expect(result.errors).toEqual(["Codex: status unavailable"]);
   });
 
-  it("always lists Codex and exposes setup when it is not installed", () => {
+  it("does not list the native Codex transport", () => {
     const options = buildAgentOptions({
       currentAgentId: "custom",
       agentConfigs: new Map(),
@@ -56,11 +56,7 @@ describe("agent options", () => {
       pendingAction: null,
     });
 
-    expect(options.find((option) => option.id === "codex")).toMatchObject({
-      isInstalled: false,
-      needsSetup: true,
-      action: null,
-    });
+    expect(options.find((option) => option.id === "codex")).toBeUndefined();
   });
 
   it("keeps a stale selected agent visible as unavailable", () => {

@@ -2,28 +2,12 @@ import { toOpenAIMessage } from "@/features/ai/lib/image-attachments";
 import { tauriFetch } from "@/utils/tauri-fetch";
 import {
   DEFAULT_OLLAMA_BASE_URL,
-  OLLAMA_CLOUD_BASE_URL,
-  isOllamaCloudUrl,
   normalizeOllamaBaseUrl,
 } from "@/features/settings/services/ollama-endpoint";
 import type { ProviderModel } from "./ai-provider-interface";
 import { AIProvider, type ProviderHeaders, type StreamRequest } from "./ai-provider-interface";
 
-/**
- * Ollama provider.
- *
- * Supports both local Ollama servers (e.g. `http://localhost:11434`) and
- * Ollama Cloud (`https://ollama.com`). For cloud, an API key is required and
- * is sent as a Bearer token. The OpenAI-compatible endpoints (`/v1/*`) are
- * used for chat completions since they match the streaming format the rest
- * of the app already parses; model discovery uses the native `/api/tags`
- * endpoint since that's what Ollama exposes for listing installed models
- * (and remote models on cloud).
- *
- * Docs:
- * - https://docs.ollama.com/api/introduction
- * - https://docs.ollama.com/cloud
- */
+/** Local Ollama model discovery and chat requests. */
 
 const OLLAMA_TIMEOUT_MS = 5000;
 
@@ -144,6 +128,8 @@ export class OllamaProvider extends AIProvider {
   }
 
   buildPayload(request: StreamRequest) {
+    if (request.modelId.endsWith(":cloud") || request.modelId.endsWith("-cloud"))
+      throw new Error("Ollama cloud models are not supported.");
     return {
       model: request.modelId,
       messages: request.messages.map(toOpenAIMessage),
@@ -154,10 +140,7 @@ export class OllamaProvider extends AIProvider {
   }
 
   async validateApiKey(apiKey: string): Promise<boolean> {
-    // If the current base URL is local, any key is effectively valid — but
-    // users only enter a key for cloud, so validate against cloud.
-    const target = isOllamaCloudUrl(this.baseUrl) ? this.baseUrl : OLLAMA_CLOUD_BASE_URL;
-    return checkOllamaConnection(target, apiKey);
+    return checkOllamaConnection(this.baseUrl, apiKey);
   }
 
   buildUrl(): string {
@@ -173,7 +156,7 @@ export class OllamaProvider extends AIProvider {
       const models: ProviderModel[] = [];
       for (const model of data.models || []) {
         const id = model.name || model.model;
-        if (!id) continue;
+        if (!id || id.endsWith(":cloud") || id.endsWith("-cloud")) continue;
         const paramSize = model.details?.parameter_size;
         models.push({
           id,

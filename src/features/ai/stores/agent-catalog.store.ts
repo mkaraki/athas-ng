@@ -96,7 +96,7 @@ export const useAgentCatalogStore = createSelectors(
       actions: {
         refreshCodex,
         refresh: async (force = false) => {
-          await Promise.all([refreshAgents(force, force), refreshCodex(force)]);
+          await refreshAgents(force, force);
         },
         runAgentAction: async (agentId, agentName, action) => {
           if (agentId === "custom" || agentId === CODEX_INTEGRATION_ID || get().pendingAction)

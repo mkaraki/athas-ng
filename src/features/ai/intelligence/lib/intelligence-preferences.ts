@@ -13,6 +13,7 @@ function connection(value: unknown): IntelligenceConnection | null {
   const entry = value as Record<string, unknown>;
   if (typeof entry.providerId !== "string" || !/^[a-z0-9][a-z0-9._-]{0,99}$/.test(entry.providerId))
     return null;
+  if (entry.providerId !== "auto" && entry.providerId !== "ollama") return null;
   if (typeof entry.modelId !== "string" || entry.modelId.length > 200) return null;
   return { providerId: entry.providerId, modelId: entry.modelId.trim() };
 }

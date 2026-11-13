@@ -24,11 +24,12 @@ afterEach(() => {
 });
 
 describe("agent catalog", () => {
-  it("loads agents and Codex once and reuses fresh results", async () => {
+  it("loads ACP agents once and reuses fresh results", async () => {
     await state().actions.refresh();
 
     expect(state().agents).toMatchObject({ status: "ready", data: [{ id: "claude-code" }] });
-    expect(state().codex).toMatchObject({ status: "ready", data: { installed: true } });
+    expect(state().codex).toEqual(empty);
+    expect(commands.getCodexStatus).not.toHaveBeenCalled();
 
     await state().actions.refresh();
     expect(commands.getAvailableAgents).toHaveBeenCalledTimes(1);

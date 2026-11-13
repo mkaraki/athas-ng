@@ -159,24 +159,14 @@ describe("agents", () => {
     ],
   });
 
-  it("puts Codex and the agents Athas ships first, then the registry", () => {
-    expect(agents.map((item) => item.id)).toEqual([
-      "claude-acp",
-      "codex",
-      "gemini-cli",
-      "locked",
-      "zed",
-    ]);
+  it("lists ACP agents without the removed native Codex transport", () => {
+    expect(agents.map((item) => item.id)).toEqual(["claude-acp", "gemini-cli", "locked", "zed"]);
     expect(groupCustomizeAgents(agents).map((group) => group.id)).toEqual(["featured", "registry"]);
   });
 
   it("explains why an agent cannot be installed and marks updates", () => {
     const byId = new Map(agents.map((item) => [item.id, item]));
-    expect(byId.get("codex")).toMatchObject({
-      isCodex: true,
-      isInstalled: false,
-      canInstall: false,
-    });
+    expect(byId.get("codex")).toBeUndefined();
     expect(byId.get("locked")?.unavailableReason).toBe("No build for this platform");
     expect(byId.get("claude-acp")).toMatchObject({ updateAvailable: true });
     expect(byId.get("claude-acp")?.brand).toMatchObject({ kind: "image" });

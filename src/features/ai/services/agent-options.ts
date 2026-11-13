@@ -1,7 +1,4 @@
-import {
-  BUILT_IN_AI_INTEGRATIONS,
-  CODEX_INTEGRATION_ID,
-} from "@/features/ai/integrations/integration-registry";
+import { CODEX_INTEGRATION_ID } from "@/features/ai/integrations/integration-registry";
 import type { AgentConfig } from "@/features/ai/types/acp.types";
 import type { AgentType } from "@/features/ai/types/ai-chat.types";
 
@@ -85,7 +82,6 @@ export function buildAgentOptions({
     .sort((left, right) => left.name.localeCompare(right.name));
   const availableAgents: Array<{ id: string; name: string; description?: string | null }> = [
     ATHAS_AGENT_OPTION,
-    ...BUILT_IN_AI_INTEGRATIONS,
     ...registryAgents,
   ];
   if (!availableAgents.some((agent) => agent.id === currentAgentId)) {
@@ -96,38 +92,40 @@ export function buildAgentOptions({
     });
   }
 
-  return availableAgents.map((agent) => {
-    const agentId = agent.id as AgentType;
-    const agentConfig = agentConfigs.get(agent.id);
-    const isAthasAgent = agent.id === "custom";
-    const isIntegration = agent.id === CODEX_INTEGRATION_ID;
-    const isInstalled =
-      isAthasAgent || (isIntegration ? codexInstalled : (agentConfig?.installed ?? false));
-    const canInstall = !isIntegration && (agentConfig?.canInstall ?? false);
-    const updateAvailable = isInstalled && canInstall && (agentConfig?.updateAvailable ?? false);
-    const isBusy = pendingAction?.agentId === agent.id;
-    const action = isBusy
-      ? pendingAction.action
-      : !isInstalled && canInstall
-        ? "install"
-        : updateAvailable
-          ? "update"
-          : null;
+  return availableAgents
+    .filter((agent) => agent.id !== CODEX_INTEGRATION_ID)
+    .map((agent) => {
+      const agentId = agent.id as AgentType;
+      const agentConfig = agentConfigs.get(agent.id);
+      const isAthasAgent = agent.id === "custom";
+      const isIntegration = agent.id === CODEX_INTEGRATION_ID;
+      const isInstalled =
+        isAthasAgent || (isIntegration ? codexInstalled : (agentConfig?.installed ?? false));
+      const canInstall = !isIntegration && (agentConfig?.canInstall ?? false);
+      const updateAvailable = isInstalled && canInstall && (agentConfig?.updateAvailable ?? false);
+      const isBusy = pendingAction?.agentId === agent.id;
+      const action = isBusy
+        ? pendingAction.action
+        : !isInstalled && canInstall
+          ? "install"
+          : updateAvailable
+            ? "update"
+            : null;
 
-    return {
-      id: agentId,
-      name: agent.name,
-      icon: agentConfig?.icon,
-      description: agentConfig?.description ?? agent.description ?? "ACP-compatible coding agent",
-      isInstalled,
-      isCurrent: agent.id === currentAgentId,
-      canInstall,
-      isBusy,
-      updateAvailable,
-      action,
-      needsSetup: isIntegration && !isInstalled,
-    };
-  });
+      return {
+        id: agentId,
+        name: agent.name,
+        icon: agentConfig?.icon,
+        description: agentConfig?.description ?? agent.description ?? "ACP-compatible coding agent",
+        isInstalled,
+        isCurrent: agent.id === currentAgentId,
+        canInstall,
+        isBusy,
+        updateAvailable,
+        action,
+        needsSetup: isIntegration && !isInstalled,
+      };
+    });
 }
 
 export function getAgentErrorMessage(error: unknown): string {
