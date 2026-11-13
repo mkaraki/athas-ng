@@ -19,11 +19,11 @@ describe("default settings", () => {
     expect(settings.githubActionNotifications).toBe(false);
   });
 
-  it("defaults chat to Athas Automatic", () => {
+  it("defaults chat to local Ollama without an invented model", () => {
     const settings = getDefaultSettingsSnapshot();
 
-    expect(settings.aiProviderId).toBe("athas");
-    expect(settings.aiModelId).toBe("auto");
+    expect(settings.aiProviderId).toBe("ollama");
+    expect(settings.aiModelId).toBe("");
   });
 
   it("preserves the established editor and terminal interaction behavior", () => {

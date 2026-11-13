@@ -25,7 +25,7 @@ describe("AI model preferences", () => {
         personalConnection: openai,
         personalConnectionIsLocal: false,
       }),
-    ).toEqual({ providerId: "athas", modelId: "auto" });
+    ).toEqual(openai);
     expect(
       getEffectiveDefaultConnection({
         preferences,

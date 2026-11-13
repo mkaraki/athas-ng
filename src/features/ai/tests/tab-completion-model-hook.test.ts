@@ -65,21 +65,6 @@ afterEach(async () => {
 });
 
 describe("useTabCompletionModel", () => {
-  it("uses Athas Tab on Automatic for accounts with Intelligence", async () => {
-    useAuthStore.setState({
-      isAuthenticated: true,
-      subscription: { capabilities: { intelligence: true } } as never,
-    });
-    await render();
-    expect(tab).toMatchObject({
-      isAutomatic: true,
-      shortName: "Athas Tab",
-      description: "Automatic: Athas Tab, included in Pro",
-      allowed: true,
-      enabled: true,
-    });
-  });
-
   it("falls back to the default model on the user's own key", async () => {
     await render();
     expect(tab.resolved).toEqual({ providerId: "anthropic", modelId: "claude-sonnet-5" });
@@ -110,15 +95,15 @@ describe("useTabCompletionModel", () => {
     await render();
     expect(tab.resolved).toBeNull();
     expect(tab.shortName).toBe("Choose a model");
-    expect(tab.description).toBe("Sign in for Athas Tab, or choose your own model");
+    expect(tab.description).toBe("Choose a model for Tab completion");
 
     useAuthStore.setState({ isAuthenticated: true });
     await render();
-    expect(tab.description).toBe("Athas Tab needs Pro, or choose your own model");
+    expect(tab.description).toBe("Choose a model for Tab completion");
 
     settings({ aiProviderId: "ollama", aiModelId: "", ollamaBaseUrl: "http://localhost:11434" });
     await render();
-    expect(tab.description).toBe("Choose a local model; Automatic never uses Athas here");
+    expect(tab.description).toBe("Choose a model for Tab completion");
   });
 
   it("follows the organization policy", async () => {

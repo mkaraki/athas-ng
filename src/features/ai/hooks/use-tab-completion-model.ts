@@ -40,10 +40,7 @@ export function useTabCompletionModel() {
 
   const describe = () => {
     if (!resolved) {
-      if (defaultIsLocal) return "Choose a local model; Automatic never uses Athas here";
-      return state.isAuthenticated
-        ? "Athas Tab needs Pro, or choose your own model"
-        : "Sign in for Athas Tab, or choose your own model";
+      return "Choose a model for Tab completion";
     }
     const prefix = choice ? "" : "Automatic: ";
     if (resolved.providerId === "athas") return `${prefix}Athas Tab, included in Pro`;

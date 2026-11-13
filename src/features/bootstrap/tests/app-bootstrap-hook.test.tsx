@@ -106,7 +106,7 @@ describe("useAppBootstrap", () => {
     const unmount = await mount(useAppBootstrap);
     await vi.waitFor(() => expect(harness.cleanupStaleTabs).toHaveBeenCalledOnce());
 
-    expect(harness.initializeAuth).toHaveBeenCalledOnce();
+    expect(harness.initializeAuth).not.toHaveBeenCalled();
     expect(harness.initializeWhatsNew).toHaveBeenCalledOnce();
     expect(harness.initializeOnboarding).toHaveBeenCalledOnce();
     expect(harness.calls).toEqual([

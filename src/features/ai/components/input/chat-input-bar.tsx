@@ -74,7 +74,6 @@ import { useProjectStore } from "@/features/workspace/stores/project.store";
 import { chatContentWidth } from "../chat/chat-content-width";
 import { ComposerAgentSelector } from "./composer-agent-selector";
 import { ChatPreferencesMenu } from "./chat-preferences-menu";
-import { AthasUsageIndicator } from "../athas-usage-indicator";
 import { useChatModeSource } from "@/features/ai/hooks/use-chat-mode";
 import {
   useComposerAcpSession,
@@ -1487,7 +1486,6 @@ const AIChatInputBar = memo(function AIChatInputBar({
             ) : (
               <AcpContextMeter usage={acpSession.usage} />
             )}
-            <AthasUsageIndicator placement="composer" />
             <ChatPreferencesMenu
               currentAgentId={currentAgentId}
               canChangeAgent={Boolean(onAgentChange)}

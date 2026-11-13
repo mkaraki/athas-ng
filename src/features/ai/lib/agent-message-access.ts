@@ -6,7 +6,8 @@ import { getProviderById } from "@/features/ai/types/providers.types";
  * others need the user's API key for that provider.
  */
 export function getProviderAccessError(providerId: string): string {
-  if (providerId === "athas") return "Sign in to Athas to use Athas models.";
+  if (providerId === "athas")
+    return "Choose another model in AI settings. Athas accounts are unavailable.";
   const name = getProviderById(providerId)?.name ?? "this provider";
   return `Add your ${name} API key in Settings to use ${name} models.`;
 }

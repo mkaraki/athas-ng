@@ -25,7 +25,6 @@ type TokenSourceSetting = "auto" | "athas" | "pat" | "gh";
 const TOKEN_SOURCE_OPTIONS = [
   { value: "auto", label: "Automatic" },
   { value: "pat", label: "Personal access token" },
-  { value: "athas", label: "Athas account" },
   { value: "gh", label: "GitHub CLI (gh)" },
 ];
 

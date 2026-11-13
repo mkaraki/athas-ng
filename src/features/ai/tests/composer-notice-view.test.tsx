@@ -85,39 +85,20 @@ function button(label: string) {
 }
 
 describe("composer notice slot", () => {
-  it("starts desktop sign-in for a signed-out hosted chat", async () => {
-    await render();
-    expect(container.textContent).toContain("Sign in to use Athas models");
-    await act(async () => button("Sign in").click());
-    expect(state.signIn).toHaveBeenCalledOnce();
-    expect(state.check).toHaveBeenCalledWith("athas");
-  });
-
-  it("retries an unverified session instead of offering sign-in", async () => {
-    state.auth.sessionCheck = {
-      reason: "unreachable",
-      message: "Could not reach athas.dev.",
-      host: "athas.dev",
-      attempt: 1,
-      nextRetryAt: null,
-    };
-    await render();
-    expect(container.textContent).toContain("Can't reach Athas");
+  it("does not offer account controls for legacy Athas chats", async () => {
+    await render("athas");
+    expect(container.textContent).toContain("Choose another model");
     expect(button("Sign in")).toBeUndefined();
-    await act(async () => button("Retry now").click());
-    expect(state.retrySessionCheck).toHaveBeenCalledOnce();
+    expect(button("Add API key")).toBeUndefined();
+    await act(async () => button("Models").click());
     expect(state.signIn).not.toHaveBeenCalled();
   });
-
-  it("opens the key dialog for another provider", async () => {
-    await render("anthropic");
-    await act(async () => button("Add API key").click());
-    expect(container.querySelector('[role="dialog"]')?.textContent).toBe("Add key");
+  it("still offers key setup for a third-party provider", async () => {
+    await render("openai");
+    expect(button("Add API key")).toBeDefined();
   });
-
-  it("renders nothing when the chat can send", async () => {
-    state.auth = { ...state.auth, isAuthenticated: true, subscription: { status: "pro" } };
-    await render("athas", false);
+  it("renders nothing for a configured local chat", async () => {
+    await render("ollama", false);
     expect(container.textContent).toBe("");
   });
 });

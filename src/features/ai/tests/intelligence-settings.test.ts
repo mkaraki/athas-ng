@@ -57,7 +57,7 @@ describe("Intelligence connection choices", () => {
     };
     expect(resolveIntelligenceConnection(params)).toEqual(params.personalConnection);
     expect(resolveIntelligenceConnection({ ...params, hasIntelligence: true }).providerId).toBe(
-      "athas",
+      "anthropic",
     );
     params.preferences.tasks["commit-message"] = { providerId: "vercel", modelId: "user/model" };
     expect(resolveIntelligenceConnection({ ...params, hasIntelligence: true })).toEqual({
@@ -66,7 +66,7 @@ describe("Intelligence connection choices", () => {
     });
   });
 
-  it("gives a hosted connection without a model the automatic model", () => {
+  it("falls back to the personal model for a retired Athas connection", () => {
     const preferences = defaultIntelligencePreferences();
     preferences.tasks.agent = { providerId: "athas", modelId: "" };
     expect(
@@ -76,7 +76,7 @@ describe("Intelligence connection choices", () => {
         hasIntelligence: true,
         personalConnection: { providerId: "anthropic", modelId: "personal-model" },
       }),
-    ).toEqual({ providerId: "athas", modelId: "auto" });
+    ).toEqual({ providerId: "anthropic", modelId: "personal-model" });
   });
 });
 

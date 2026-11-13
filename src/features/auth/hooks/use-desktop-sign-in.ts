@@ -1,33 +1,17 @@
-import { toast } from "sonner";
-import { useDesktopSignInStore } from "../stores/desktop-sign-in.store";
-
 interface UseDesktopSignInOptions {
   apiBase?: string;
   onSuccess?: () => void;
 }
 
 export function useDesktopSignIn(options: UseDesktopSignInOptions = {}) {
-  const isSigningIn = useDesktopSignInStore((state) => state.isSigningIn);
-  const error = useDesktopSignInStore((state) => state.error);
-  const actions = useDesktopSignInStore((state) => state.actions);
-
-  /**
-   * Shows the outcome as a toast. It also rejects on failure so callers can stop a
-   * follow-up step; a caller that only starts sign-in must catch that rejection.
-   */
-  const signIn = async () => {
-    const completed = await actions.signIn(options.apiBase);
-    if (completed) {
-      toast.success("Signed in to Athas Desktop.");
-      options.onSuccess?.();
-    } else {
-      const reason = useDesktopSignInStore.getState().error;
-      if (reason) {
-        toast.error(reason);
-        throw new Error(reason);
-      }
-    }
+  void options;
+  return {
+    signIn: async () => {
+      throw new Error("Athas accounts are not supported.");
+    },
+    isSigningIn: false,
+    error: null,
+    cancel: () => {},
+    reopen: async () => {},
   };
-
-  return { signIn, isSigningIn, error, cancel: actions.cancel, reopen: actions.reopen };
 }

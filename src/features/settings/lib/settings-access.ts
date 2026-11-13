@@ -28,6 +28,7 @@ export function resolveVisibleSettingsSection(
   tab: SettingsTab,
   access: SettingsAccess,
 ): SettingsSection {
+  if (["account", "sharing", "collaboration", "enterprise"].includes(tab)) return "general";
   if (tab === "language") {
     return "editor";
   }

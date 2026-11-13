@@ -1,6 +1,5 @@
 import { openExternalUrl } from "@/utils/external-url";
 import { useCallback, useMemo, useState } from "react";
-import { ProGate } from "@/features/auth/components/pro-gate";
 import { Alert, AlertDescription, AlertTitle } from "@/ui/alert";
 import {
   normalizeGenerativeUIView,
@@ -59,7 +58,7 @@ export function GenerativeUIRenderer({ component }: GenerativeUIRendererProps) {
   const error = result.error ?? actionError;
 
   return (
-    <ProGate>
+    <>
       {error ? (
         <Alert tone="error" role="alert">
           <AlertTitle>Generated UI unavailable</AlertTitle>
@@ -68,6 +67,6 @@ export function GenerativeUIRenderer({ component }: GenerativeUIRendererProps) {
       ) : result.node ? (
         <ExtensionViewRenderer node={result.node} execute={execute} surface="embedded" />
       ) : null}
-    </ProGate>
+    </>
   );
 }

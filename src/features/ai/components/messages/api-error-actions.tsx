@@ -1,17 +1,14 @@
 import { useState } from "react";
-import { openExternalUrl } from "@/utils/external-url";
 import { toast } from "sonner";
 import { ProviderApiKeyCommand } from "../provider-api-key-command";
-import { HOSTED_BILLING_CODES, resolveBillingUrl } from "@/features/ai/lib/api-error";
+import { HOSTED_BILLING_CODES } from "@/features/ai/lib/api-error";
 import { openNewAgentChat } from "@/features/ai/services/open-new-agent-chat";
-import { useDesktopSignIn } from "@/features/auth/hooks/use-desktop-sign-in";
 import { useUIState } from "@/features/layout/stores/ui-state.store";
 import { Button } from "@/ui/button";
 
 export function ApiErrorActions({
   code,
   serverCode,
-  billingUrl,
   providerId,
   onRetry,
 }: {
@@ -24,7 +21,6 @@ export function ApiErrorActions({
 }) {
   const [keyManagerOpen, setKeyManagerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const { signIn, isSigningIn, reopen, cancel } = useDesktopSignIn();
   const hosted = providerId === "athas";
   const authentication = code === "401";
   const tooLarge = serverCode === "request_too_large" || code === "413";
@@ -46,46 +42,29 @@ export function ApiErrorActions({
       openNewAgentChat();
       return;
     }
-    if (hosted && payment) return openExternalUrl(resolveBillingUrl(billingUrl));
-    if (hosted && authentication) return signIn();
-    if (configure && !hosted) {
+    if (hosted) return openSettings();
+    if (configure) {
       setKeyManagerOpen(true);
       return;
     }
-    if (hosted && code === "403") return openSettings();
     if (onRetry) return onRetry();
     openSettings();
   };
   const label = tooLarge
     ? "Start new chat"
-    : hosted && payment
-      ? serverCode === "allowance_exhausted" || serverCode === "insufficient_balance"
-        ? "Add credit"
-        : "Manage billing"
-      : hosted && authentication
-        ? "Sign in to Athas"
-        : configure && !hosted
-          ? "Configure provider"
-          : hosted && code === "403"
-            ? "Configure models"
-            : onRetry
-              ? "Try again"
-              : "Configure models";
+    : hosted
+      ? "Configure models"
+      : configure
+        ? "Configure provider"
+        : onRetry
+          ? "Try again"
+          : "Configure models";
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Button variant="default" disabled={busy || isSigningIn} onClick={() => void run(recover)}>
-        {isSigningIn ? "Waiting for browser…" : busy ? "Working…" : label}
+      <Button variant="default" disabled={busy} onClick={() => void run(recover)}>
+        {busy ? "Working…" : label}
       </Button>
-      {isSigningIn ? (
-        <>
-          <Button variant="ghost" onClick={() => void run(reopen)}>
-            Open sign-in page
-          </Button>
-          <Button variant="ghost" onClick={cancel}>
-            Cancel
-          </Button>
-        </>
-      ) : label !== "Configure models" ? (
+      {label !== "Configure models" ? (
         <Button variant="ghost" onClick={openSettings}>
           Model settings
         </Button>

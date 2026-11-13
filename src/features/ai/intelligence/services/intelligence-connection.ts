@@ -53,11 +53,7 @@ export async function getIntelligenceConnection(task: IntelligenceTask) {
         })
       : resolveIntelligenceConnection({ ...context, task });
   if (!connection) {
-    throw new AutocompleteModelRequiredError(
-      auth.isAuthenticated
-        ? "Choose a model for Tab completion in Settings."
-        : "Sign in to use Athas for Tab completion, or choose a model for it in Settings.",
-    );
+    throw new AutocompleteModelRequiredError("Choose a model for Tab completion in Settings.");
   }
   assertIntelligenceConnectionAllowed(connection.providerId, task);
   return { ...connection, scope: preferenceState.scope, userId: auth.user?.id ?? null };

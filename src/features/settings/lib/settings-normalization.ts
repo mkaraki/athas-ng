@@ -395,6 +395,8 @@ function normalizeAISkills(skills: Settings["aiSkills"]): Settings["aiSkills"] {
 
 function normalizeAISettings(settings: Settings): Settings {
   const normalizedSettings = { ...settings };
+  if (normalizedSettings.githubTokenSource === "athas")
+    normalizedSettings.githubTokenSource = "auto";
   const requestedProviderId =
     typeof normalizedSettings.aiProviderId === "string"
       ? normalizedSettings.aiProviderId.trim()
@@ -404,7 +406,10 @@ function normalizeAISettings(settings: Settings): Settings {
   normalizedSettings.aiCustomModelId = normalizedSettings.aiCustomModelId?.trim() || "";
   normalizedSettings.ollamaBaseUrl = normalizeOllamaBaseUrl(normalizedSettings.ollamaBaseUrl);
 
-  if (!provider) {
+  if (requestedProviderId === "athas") {
+    normalizedSettings.aiProviderId = DEFAULT_AI_PROVIDER_ID;
+    normalizedSettings.aiModelId = DEFAULT_AI_MODEL_ID;
+  } else if (!provider) {
     normalizedSettings.aiProviderId = requestedProviderId || DEFAULT_AI_PROVIDER_ID;
     normalizedSettings.aiModelId = normalizedSettings.aiModelId?.trim() || DEFAULT_AI_MODEL_ID;
   } else {

@@ -73,14 +73,14 @@ describe("useSettingsPage", () => {
     act(() => page.current.selectTab("enterprise"));
     expect(page.current.activeTab).toBe("general");
     expect(page.current.canShowEnterpriseSettings).toBe(false);
-    expect(page.current.visibleTabs.map((tab) => tab.id)).not.toContain("enterprise");
+    expect(page.current.visibleTabs.map((tab) => tab.id)).not.not.toContain("enterprise");
 
     act(() => page.current.selectTab("language"));
     expect(page.current.activeTab).toBe("editor");
     unmount();
   });
 
-  it("shows enterprise settings to enterprise accounts", () => {
+  it("keeps removed enterprise settings unavailable with stale account state", () => {
     useAuthStore.setState({ subscription: enterpriseSubscription });
     const { result: page, unmount } = renderSettingsPage();
 
@@ -88,8 +88,8 @@ describe("useSettingsPage", () => {
 
     expect(page.current.canShowEnterpriseSettings).toBe(true);
     expect(page.current.canShowCollaborationSettings).toBe(false);
-    expect(page.current.activeTab).toBe("enterprise");
-    expect(page.current.visibleTabs.map((tab) => tab.id)).toContain("enterprise");
+    expect(page.current.activeTab).toBe("general");
+    expect(page.current.visibleTabs.map((tab) => tab.id)).not.toContain("enterprise");
     unmount();
   });
 

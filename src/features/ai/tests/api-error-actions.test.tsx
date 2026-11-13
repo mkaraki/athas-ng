@@ -69,77 +69,33 @@ async function click(
   return label;
 }
 describe("API error recovery", () => {
-  it("opens billing on the website, not the API server", async () => {
-    state.base = "http://localhost:3000";
-    await click("402", "athas");
-    expect(state.openUrl).toHaveBeenCalledWith("https://website.test/dashboard/settings/billing");
+  it.each(["401", "402", "403"])("sends legacy cloud errors %s to model settings", async (code) => {
+    expect(await click(code, "athas")).toBe("Configure models");
+    expect(state.settings).toHaveBeenCalledWith("ai");
+    expect(state.openUrl).not.toHaveBeenCalled();
     expect(state.signIn).not.toHaveBeenCalled();
   });
-  it("offers to add credit and opens the billing page the server sent", async () => {
-    const label = await click("402", "athas", undefined, {
-      serverCode: "insufficient_balance",
-      billingUrl: "/dashboard/settings/billing?topup=1",
-    });
-    expect(label).toBe("Add credit");
-    expect(state.openUrl).toHaveBeenCalledWith(
-      "http://localhost:3000/dashboard/settings/billing?topup=1",
-    );
-  });
-  it("ignores a billing link to another site", async () => {
-    const label = await click("402", "athas", undefined, {
-      serverCode: "spending_limit_reached",
-      billingUrl: "https://elsewhere.test/pay",
-    });
-    expect(label).toBe("Manage billing");
-    expect(state.openUrl).toHaveBeenCalledWith("https://website.test/dashboard/settings/billing");
-  });
-  it("starts a new chat when the conversation is too large", async () => {
-    expect(await click("402", "athas", undefined, { serverCode: "request_too_large" })).toBe(
-      "Start new chat",
-    );
+  it("starts a new local chat for an oversized conversation", async () => {
+    expect(await click("413", "ollama")).toBe("Start new chat");
     expect(state.newChat).toHaveBeenCalledOnce();
-    expect(state.openUrl).not.toHaveBeenCalled();
   });
-  it("starts sign-in when Athas rejects the session", async () => {
-    await click("401", "athas");
-    expect(state.signIn).toHaveBeenCalledOnce();
-  });
-  it.each(["401", "402", "403"])(
-    "opens the failing external provider configuration for %s",
-    async (code) => {
-      await click(code, "anthropic");
-      expect(container.querySelector('[role="dialog"]')?.textContent).toBe("Configure anthropic");
-      expect(state.openUrl).not.toHaveBeenCalled();
-    },
-  );
-  it("retries a transient failure through the conversation callback", async () => {
+  it("retries transient local failures", async () => {
     const retry = vi.fn();
-    await click("503", "athas", retry);
+    await click("503", "openai", retry);
     expect(retry).toHaveBeenCalledOnce();
   });
-  it("does not retry a permission failure without changing configuration", async () => {
-    const retry = vi.fn();
-    await click("403", "athas", retry);
-    expect(state.settings).toHaveBeenCalledWith("ai");
-    expect(retry).not.toHaveBeenCalled();
-  });
-  it("reports navigation failures and restores the action", async () => {
-    state.openUrl.mockRejectedValueOnce(new Error("Could not open browser"));
-    await click("402", "athas");
-    expect(state.error).toHaveBeenCalledWith("Could not open browser");
+  it("restores the button after a retry failure", async () => {
+    await click("503", "openai", () => {
+      throw new Error("offline");
+    });
+    expect(state.error).toHaveBeenCalledWith("offline");
     expect(container.querySelector("button")?.disabled).toBe(false);
   });
-  it("preserves SDK HTTP status and server details", () => {
-    const error = Object.assign(new Error("Payment Required"), {
-      statusCode: 402,
-      responseBody: '{"error":"Monthly spending limit reached"}',
-    });
-    const formatted = formatApiError("athas", error);
-    expect(getApiErrorCode(formatted)).toBe("402");
-    expect(formatted).toContain(error.responseBody);
-  });
-  it("recognizes previously saved payment errors without an HTTP code", () => {
-    expect(getApiErrorCode("Failed to connect to athas API: Payment Required")).toBe("402");
-    expect(getApiErrorCode("Network unavailable")).toBe("");
+  it("still reads error status from old saved conversations", () => {
+    expect(
+      getApiErrorCode(
+        formatApiError("athas", Object.assign(new Error("Payment Required"), { statusCode: 402 })),
+      ),
+    ).toBe("402");
   });
 });

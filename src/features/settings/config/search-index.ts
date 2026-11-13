@@ -20,71 +20,6 @@ export const settingsSearchIndex: SettingSearchRecord[] = [
       "cursorignore",
     ],
   },
-  {
-    id: "cloud-agent-sessions",
-    tab: "sharing",
-    section: "Cloud Sessions",
-    label: "Sync Agent Sessions",
-    description: "Read private agent conversations on the web",
-    keywords: ["cloud", "sync", "private", "sessions", "web"],
-  },
-  {
-    id: "shared-links",
-    tab: "sharing",
-    section: "Shared Items",
-    label: "Shared Items",
-    description: "Manage shared links, visibility, and live updates",
-    keywords: ["share", "public", "live", "visibility", "revoke"],
-  },
-  // Enterprise Settings
-  {
-    id: "enterprise-managed-mode",
-    tab: "enterprise",
-    section: "Enterprise Controls",
-    label: "Managed Mode",
-    description: "Enforce enterprise policy controls in the desktop app",
-    keywords: ["enterprise", "managed", "policy", "organization", "admin"],
-  },
-  {
-    id: "enterprise-extension-allowlist-toggle",
-    tab: "enterprise",
-    section: "Enterprise Controls",
-    label: "Require Integration Allowlist",
-    description: "Only approved integration IDs can be installed or updated",
-    keywords: ["enterprise", "integrations", "extensions", "allowlist", "policy", "security"],
-  },
-  {
-    id: "enterprise-allow-byok",
-    tab: "enterprise",
-    section: "Enterprise Controls",
-    label: "Allow BYOK Autocomplete",
-    description: "Allow user-provided OpenRouter keys for autocomplete",
-    keywords: ["enterprise", "byok", "openrouter", "autocomplete", "api", "key"],
-  },
-  {
-    id: "enterprise-ai-completion",
-    tab: "enterprise",
-    section: "Enterprise Controls",
-    label: "Enable AI Autocomplete",
-    description: "Enable inline AI completion for enterprise users",
-    keywords: ["enterprise", "ai", "autocomplete", "completion"],
-  },
-  {
-    id: "enterprise-ai-chat",
-    tab: "enterprise",
-    section: "Enterprise Controls",
-    label: "Enable Agent",
-    description: "Enable Agent panel for enterprise users",
-    keywords: ["enterprise", "ai", "agent", "chat", "panel"],
-  },
-  {
-    id: "enterprise-extension-allowlist-entries",
-    tab: "enterprise",
-    section: "Integration Allowlist",
-    label: "Integration Allowlist",
-    description: "Approved integration IDs for enterprise-managed environments",
-    keywords: ["enterprise", "integrations", "extensions", "ids", "allowlist", "approved"],
-  },
 
   // Editor Settings
   {
@@ -390,7 +325,7 @@ export const settingsSearchIndex: SettingSearchRecord[] = [
     tab: "git",
     section: "GitHub Account",
     label: "Token Source",
-    description: "Choose between a personal access token, your Athas account, or the GitHub CLI",
+    description: "Choose between a personal access token and the GitHub CLI",
     keywords: ["github", "token", "auth", "credential", "source", "gh", "cli", "organization"],
   },
   {
@@ -398,7 +333,7 @@ export const settingsSearchIndex: SettingSearchRecord[] = [
     tab: "git",
     section: "GitHub Account",
     label: "Personal Access Token",
-    description: "Use your own GitHub token when an organization has not approved Athas",
+    description: "Use a personal GitHub access token",
     keywords: ["github", "pat", "token", "personal access token", "org", "sso", "ghp"],
   },
   {
@@ -598,30 +533,6 @@ export const settingsSearchIndex: SettingSearchRecord[] = [
     : []),
 
   // AI Settings
-  {
-    id: "ai-athas-plan",
-    tab: "ai",
-    section: "Athas",
-    label: "Plan",
-    description: "Your plan and the monthly credit it includes for Athas models",
-    keywords: ["ai", "athas", "pro", "plan", "billing", "subscription", "intelligence"],
-  },
-  {
-    id: "ai-athas-credit",
-    tab: "ai",
-    section: "Athas",
-    label: "Included credit",
-    description: "How much of this month's included Athas credit is left",
-    keywords: ["ai", "credit", "usage", "allowance", "limit", "quota"],
-  },
-  {
-    id: "ai-athas-balance",
-    tab: "ai",
-    section: "Athas",
-    label: "Balance",
-    description: "Prepaid balance used after included credit runs out",
-    keywords: ["ai", "wallet", "balance", "top up", "add credit", "prepaid", "billing"],
-  },
   {
     id: "ai-default-model",
     tab: "ai",

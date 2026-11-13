@@ -1,12 +1,10 @@
 import { type ReactNode, Suspense, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { AgentsPlanFooter } from "@/features/ai/components/sidebar/agents-plan-footer";
 import { openCustomize } from "@/features/ai/customize/services/open-customize";
 import {
   startAgentInProject,
   startProjectlessChat,
 } from "@/features/ai/services/agent-project-navigation";
-import { AccountMenu } from "@/features/auth/components/account-menu";
 import { DiagnosticsActivityControl } from "@/features/diagnostics/components/diagnostics-activity-control";
 import { useCommandShortcut } from "@/features/keymaps/hooks/use-command-shortcut";
 import { keymapRegistry } from "@/features/keymaps/services/keymap-registry";
@@ -46,7 +44,6 @@ import {
 import Keybinding from "@/ui/keybinding";
 import { OverlaySideProvider } from "@/ui/overlay-side";
 import { SidebarIconButton, SidebarListItem, SidebarPanel, SidebarScrollArea } from "@/ui/sidebar";
-import { getWebContributions } from "@/utils/web-contributions";
 import { useAddProjectItems } from "../../hooks/use-add-project-items";
 import { type ProjectTool, useProjectTools } from "../dock/project-tools";
 import { SidebarProjects } from "./sidebar-projects";
@@ -115,7 +112,6 @@ function SidebarTop() {
 }
 
 function SidebarBottom() {
-  const WebAccountMenu = getWebContributions().AccountMenu;
   const terminalEnabled = useSettingsStore((state) => state.settings.coreFeatures.terminal);
   const aiEnabled = useSettingsStore((state) => state.settings.coreFeatures.aiChat);
 
@@ -132,14 +128,6 @@ function SidebarBottom() {
         ) : null}
         <ControlSizeProvider size="sm">
           <div className="flex h-list-row items-center gap-chrome-tight">
-            {WebAccountMenu ? (
-              <Suspense fallback={null}>
-                <WebAccountMenu />
-              </Suspense>
-            ) : (
-              <AccountMenu />
-            )}
-            {aiEnabled ? <AgentsPlanFooter /> : null}
             <div className="ml-auto flex items-center gap-chrome-tight">
               <AppUpdateControl />
               <DiagnosticsActivityControl />

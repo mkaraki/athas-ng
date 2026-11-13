@@ -83,8 +83,8 @@ describe("getIntelligenceConnection", () => {
       userId,
     });
     expect(await getIntelligenceConnection("agent")).toMatchObject({
-      providerId: "athas",
-      modelId: "auto",
+      providerId: "anthropic",
+      modelId: "claude-sonnet-5",
     });
     const [url, init] = mocks.fetch.mock.calls[0] as [string, RequestInit];
     expect(url).toMatch(/\/api\/account\/intelligence\?scope=personal$/);
@@ -98,9 +98,7 @@ describe("getIntelligenceConnection", () => {
     });
     const signedOut = await getIntelligenceConnection("autocomplete").catch((error) => error);
     expect(signedOut).toBeInstanceOf(AutocompleteModelRequiredError);
-    expect(signedOut.message).toBe(
-      "Sign in to use Athas for Tab completion, or choose a model for it in Settings.",
-    );
+    expect(signedOut.message).toBe("Choose a model for Tab completion in Settings.");
 
     signIn(nextUserId++);
     mocks.fetch.mockResolvedValue(

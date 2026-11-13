@@ -104,7 +104,7 @@ describe("Tab completion connection", () => {
   const ollama = { providerId: "ollama", modelId: "qwen3-coder" };
   const isLocalProvider = (providerId: string) => providerId === "ollama";
 
-  it("uses the Athas Tab model on Automatic instead of following the default model", () => {
+  it("follows the configured provider on Automatic", () => {
     const preferences = defaultIntelligencePreferences();
     preferences.defaultConnection = openai;
     expect(
@@ -114,7 +114,7 @@ describe("Tab completion connection", () => {
         personalConnection: openai,
         isLocalProvider,
       }),
-    ).toEqual({ providerId: "athas", modelId: "auto" });
+    ).toEqual(openai);
   });
 
   it("stays off Athas when the default model is local", () => {
@@ -197,6 +197,6 @@ describe("Tab completion connection", () => {
         personalConnection: ollama,
         isLocalProvider,
       }),
-    ).toEqual({ providerId: "athas", modelId: "auto" });
+    ).toEqual(ollama);
   });
 });

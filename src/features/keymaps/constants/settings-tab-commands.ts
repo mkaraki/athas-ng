@@ -6,7 +6,7 @@ export const getSettingsTabCommandId = (tab: SettingsTab) => `preferences.openSe
 
 /** The settings tabs that get an open command; `language` is an alias of the editor tab. */
 export const settingsCommandTabs = (Object.keys(settingsTabLabels) as SettingsTab[]).filter(
-  (tab) => tab !== "language",
+  (tab) => !["language", "account", "sharing", "collaboration", "enterprise"].includes(tab),
 );
 
 export const settingsTabCommandIds = settingsCommandTabs.map(getSettingsTabCommandId);

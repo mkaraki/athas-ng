@@ -23,7 +23,6 @@ import {
   normalizePullRequest,
   normalizePullRequestFiles,
 } from "../services/github-pr-store-service";
-import { syncGitHubTokenFromAccount } from "../services/github-token-service";
 import type { PullRequest } from "../types/github.types";
 
 function json(body: unknown, status = 200) {
@@ -51,78 +50,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
-});
-
-describe("syncGitHubTokenFromAccount", () => {
-  it("reports a signed-out Athas account without calling the server", async () => {
-    harness.authToken = null;
-
-    await expect(syncGitHubTokenFromAccount()).resolves.toEqual({ status: "notSignedIn" });
-    expect(harness.tauriFetch).not.toHaveBeenCalled();
-  });
-
-  it("stores the token linked to the Athas account", async () => {
-    harness.tauriFetch.mockResolvedValue(
-      json({ token: " gho_123 ", accountLogin: "octocat", scopes: "repo" }),
-    );
-
-    await expect(syncGitHubTokenFromAccount()).resolves.toEqual({
-      status: "synced",
-      accountLogin: "octocat",
-      scopes: "repo",
-    });
-    const [url, init] = harness.tauriFetch.mock.calls[0];
-    expect(url).toMatch(/\/api\/desktop\/github\/token$/);
-    expect(init.headers).toEqual({ Authorization: "Bearer athas-token" });
-    expect(commands.storeGithubToken).toHaveBeenCalledWith("gho_123");
-  });
-
-  it("drops non-string account details", async () => {
-    harness.tauriFetch.mockResolvedValue(json({ token: "gho_1", accountLogin: 5 }));
-
-    await expect(syncGitHubTokenFromAccount()).resolves.toEqual({
-      status: "synced",
-      accountLogin: null,
-      scopes: null,
-    });
-  });
-
-  it("removes the stored token when the account is not usable", async () => {
-    harness.tauriFetch
-      .mockResolvedValueOnce(json({}, 401))
-      .mockResolvedValueOnce(json({}, 403))
-      .mockResolvedValueOnce(json({}, 404))
-      .mockResolvedValueOnce(json({}, 400))
-      .mockResolvedValueOnce(json({ token: "   " }));
-
-    const statuses = [];
-    for (let index = 0; index < 5; index += 1) {
-      statuses.push((await syncGitHubTokenFromAccount()).status);
-    }
-
-    expect(statuses).toEqual([
-      "notSignedIn",
-      "notSignedIn",
-      "notConnected",
-      "notConnected",
-      "notConnected",
-    ]);
-    expect(commands.removeGithubToken).toHaveBeenCalledTimes(5);
-    expect(commands.storeGithubToken).not.toHaveBeenCalled();
-  });
-
-  it("fails on server errors and keychain errors", async () => {
-    harness.tauriFetch.mockResolvedValueOnce(json({}, 500));
-    await expect(syncGitHubTokenFromAccount()).rejects.toThrow("Failed to sync GitHub token: 500");
-
-    harness.tauriFetch.mockResolvedValueOnce(json({ token: "gho_1" }));
-    vi.mocked(commands.storeGithubToken).mockRejectedValueOnce(new Error("keychain locked"));
-    await expect(syncGitHubTokenFromAccount()).rejects.toThrow("keychain locked");
-
-    harness.tauriFetch.mockResolvedValueOnce(json({}, 401));
-    vi.mocked(commands.removeGithubToken).mockRejectedValueOnce(new Error("keychain locked"));
-    await expect(syncGitHubTokenFromAccount()).rejects.toThrow("keychain locked");
-  });
 });
 
 describe("GitHub auth check", () => {
@@ -168,36 +95,7 @@ describe("GitHub auth check", () => {
     expect(useGitHubStore.getState().currentUser).toBe("octocat");
   });
 
-  it("syncs the token from the Athas account when none is stored", async () => {
-    vi.spyOn(commands, "githubCheckAuth")
-      .mockResolvedValueOnce("notAuthenticated")
-      .mockResolvedValueOnce("authenticated");
-    vi.spyOn(commands, "githubGetCurrentUser").mockResolvedValue("octocat");
-    harness.tauriFetch.mockResolvedValue(json({ token: "gho_1" }));
-
-    await useGitHubStore.getState().actions.checkAuth();
-
-    expect(useGitHubStore.getState()).toMatchObject({
-      isAuthenticated: true,
-      githubAccountStatus: "connected",
-      currentUser: "octocat",
-    });
-  });
-
-  it("explains when GitHub rejects the synced token", async () => {
-    vi.spyOn(commands, "githubCheckAuth").mockResolvedValue("notAuthenticated");
-    harness.tauriFetch.mockResolvedValue(json({ token: "gho_revoked" }));
-
-    await useGitHubStore.getState().actions.checkAuth();
-
-    expect(useGitHubStore.getState()).toMatchObject({
-      isAuthenticated: false,
-      githubAccountStatus: "connected",
-      authError: "A GitHub token was synced from your Athas account, but GitHub rejected it.",
-    });
-  });
-
-  it("reports an unconnected or signed-out Athas account", async () => {
+  it("does not fetch account tokens when local credentials are missing", async () => {
     vi.spyOn(commands, "githubCheckAuth").mockResolvedValue("notAuthenticated");
     harness.tauriFetch.mockResolvedValue(json({}, 404));
 
@@ -210,20 +108,8 @@ describe("GitHub auth check", () => {
 
     harness.authToken = null;
     await useGitHubStore.getState().actions.checkAuth({ force: true });
-    expect(useGitHubStore.getState().githubAccountStatus).toBe("notSignedIn");
-  });
-
-  it("keeps the sync failure as the reason", async () => {
-    vi.spyOn(commands, "githubCheckAuth").mockResolvedValue("notAuthenticated");
-    harness.tauriFetch.mockRejectedValue(new Error("offline"));
-
-    await useGitHubStore.getState().actions.checkAuth();
-
-    expect(useGitHubStore.getState()).toMatchObject({
-      isAuthenticated: false,
-      isCheckingAuth: false,
-      authError: "Failed to sync GitHub account token: offline",
-    });
+    expect(useGitHubStore.getState().githubAccountStatus).toBe("notConnected");
+    expect(harness.tauriFetch).not.toHaveBeenCalled();
   });
 
   it("reports a failed auth check", async () => {

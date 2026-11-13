@@ -1,5 +1,4 @@
 import {
-  UploadIcon,
   BellIcon,
   CodeBlockIcon,
   GearIcon,
@@ -10,14 +9,11 @@ import {
   PaintBrushIcon,
   PlugsConnectedIcon,
   SettingsIcon,
-  ShieldCheckIcon,
   SitemapIcon,
   SparkleIcon,
   TerminalWindowIcon,
   TextIndentIcon,
   ChatBubbleTextIcon,
-  UserCircleIcon,
-  UsersIcon,
 } from "@/ui/icons";
 import type { SettingsTab } from "@/features/layout/stores/ui-state/types/ui-state.types";
 import type { SettingsSection } from "@/features/settings/types/settings.types";
@@ -35,16 +31,6 @@ export const SETTINGS_TAB_ITEMS: SettingsTabItem[] = [
     id: "general",
     label: "General",
     icon: SettingsIcon,
-  },
-  {
-    id: "account",
-    label: "Account",
-    icon: UserCircleIcon,
-  },
-  {
-    id: "sharing",
-    label: "Cloud",
-    icon: UploadIcon,
   },
   {
     id: "appearance",
@@ -106,16 +92,6 @@ export const SETTINGS_TAB_ITEMS: SettingsTabItem[] = [
     id: "ai-mcp",
     label: "MCP servers",
     icon: PlugsConnectedIcon,
-  },
-  {
-    id: "collaboration",
-    label: "Collaboration",
-    icon: UsersIcon,
-  },
-  {
-    id: "enterprise",
-    label: "Enterprise",
-    icon: ShieldCheckIcon,
   },
   {
     id: "advanced",

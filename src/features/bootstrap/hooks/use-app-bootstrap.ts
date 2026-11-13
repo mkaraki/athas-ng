@@ -28,7 +28,6 @@ import { useDeepLink } from "@/features/window/hooks/use-deep-link";
 import { useExternalNavigationGuard } from "@/features/window/hooks/use-external-navigation-guard";
 import { usePlatformSetup } from "@/features/bootstrap/hooks/use-platform-setup";
 import { useWindowDocumentState } from "@/features/window/hooks/use-window-document-state";
-import { useAuthStore } from "@/features/auth/stores/auth.store";
 import {
   enqueueWindowOpenRequest,
   parseWindowOpenUrl,
@@ -69,10 +68,6 @@ export function useAppBootstrap() {
     void import("@/features/browser/services/browser-tab-manager").then(({ browserTabManager }) =>
       browserTabManager.cleanupStaleTabs(),
     );
-  }, []);
-
-  useEffect(() => {
-    void useAuthStore.getState().actions.initialize();
   }, []);
 
   useEffect(() => {

@@ -1,10 +1,9 @@
 //! Chooses which GitHub credential Athas should use for API calls.
 //!
-//! Three sources can supply one, in descending priority under `Auto`:
+//! Local credentials are tried in descending priority under `Auto`:
 //!
 //! 1. a personal access token the user pasted into Settings,
-//! 2. the token synced from the connected Athas account,
-//! 3. the token owned by the user's `gh` CLI installation.
+//! 2. the token owned by the user's `gh` CLI installation.
 //!
 //! The `gh` token is the escape hatch for repositories the Athas OAuth app
 //! cannot reach — typically an organization that has not approved it. Users can
@@ -79,20 +78,18 @@ where
 {
    let TokenSources {
       personal_access_token,
-      athas_account_token,
+      athas_account_token: _,
       gh_cli_token,
    } = sources;
    let pat = || {
       non_blank(personal_access_token())
          .map(|token| (token, GitHubTokenSource::PersonalAccessToken))
    };
-   let athas = || non_blank(athas_account_token()).map(|token| (token, GitHubTokenSource::Athas));
    let gh = || gh_cli_token().map(|token| (token, GitHubTokenSource::GhCli));
 
    let resolved = match preference {
-      TokenSourcePreference::Auto => pat().or_else(athas).or_else(gh),
+      TokenSourcePreference::Auto | TokenSourcePreference::Athas => pat().or_else(gh),
       TokenSourcePreference::PersonalAccessToken => pat(),
-      TokenSourcePreference::Athas => athas(),
       TokenSourcePreference::GhCli => gh(),
    };
 
@@ -275,7 +272,7 @@ mod tests {
    }
 
    #[test]
-   fn auto_prefers_the_pasted_token_then_the_account_then_gh() {
+   fn auto_prefers_the_pasted_token_then_gh() {
       use GitHubTokenSource::*;
       let auto = TokenSourcePreference::Auto;
 
@@ -285,7 +282,7 @@ mod tests {
       );
       assert_eq!(
          resolve_token(auto, sources(Some("  "), Some("athas"), Some("gh"))),
-         resolved("athas", Athas)
+         resolved("gh", GhCli)
       );
       assert_eq!(
          resolve_token(auto, sources(None, None, Some("gh"))),
@@ -295,7 +292,7 @@ mod tests {
    }
 
    #[test]
-   fn a_pinned_source_never_falls_back() {
+   fn legacy_account_preference_migrates_to_local_credentials() {
       use GitHubTokenSource::*;
 
       assert_eq!(
@@ -303,7 +300,7 @@ mod tests {
             TokenSourcePreference::Athas,
             sources(Some("pat"), Some("athas"), Some("gh"))
          ),
-         resolved("athas", Athas)
+         resolved("pat", PersonalAccessToken)
       );
       assert_eq!(
          resolve_token(

@@ -149,9 +149,9 @@ describe("starting a turn", () => {
     expect(mocks.stream).not.toHaveBeenCalled();
   });
 
-  it("asks to sign in for Athas models and for a key for the user's own providers", () => {
+  it("explains unavailable Athas models and missing provider keys", () => {
     expect(getAgentAccessMessage("custom", "athas", "x")).toBe(
-      "Sign in to Athas to use Athas models.",
+      "Choose another model in AI settings. Athas accounts are unavailable.",
     );
     expect(getAgentAccessMessage("custom", "openai", undefined)).toBe(
       "Add your OpenAI API key in Settings to use OpenAI models.",

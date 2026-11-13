@@ -18,10 +18,6 @@ const titleLeadingSource = readFileSync(
   fileURLToPath(new URL("../components/title-bar/title-leading.tsx", import.meta.url)),
   "utf8",
 );
-const accountMenuSource = readFileSync(
-  fileURLToPath(new URL("../../auth/components/account-menu.tsx", import.meta.url)),
-  "utf8",
-);
 const workbenchSidebarSource = readFileSync(
   fileURLToPath(new URL("../../layout/components/sidebar/workbench-sidebar.tsx", import.meta.url)),
   "utf8",
@@ -63,22 +59,19 @@ describe("title bar controls", () => {
     expect(tabBarSource).not.toContain("<TabHistoryNavigation />");
   });
 
-  it("puts the account first and the update, run, terminal and notifications after it in the sidebar footer", () => {
+  it("keeps update, run, terminal and notifications in order in the sidebar footer", () => {
     const accountIndex = workbenchSidebarSource.indexOf("<AccountMenu />");
     const updateIndex = workbenchSidebarSource.indexOf("<AppUpdateControl");
     const runActionsIndex = workbenchSidebarSource.indexOf("<RunActionsButton");
     const terminalIndex = workbenchSidebarSource.indexOf("<TerminalToggle />");
     const notificationsIndex = workbenchSidebarSource.indexOf("<NotificationsTrigger");
 
-    expect(accountIndex).toBeGreaterThan(-1);
-    expect(updateIndex).toBeGreaterThan(accountIndex);
+    expect(accountIndex).toBe(-1);
+    expect(updateIndex).toBeGreaterThan(-1);
     expect(runActionsIndex).toBeGreaterThan(updateIndex);
     expect(terminalIndex).toBeGreaterThan(runActionsIndex);
     expect(notificationsIndex).toBeGreaterThan(terminalIndex);
-    expect(accountMenuSource).toContain("<SidebarIconButton");
-    expect(accountMenuSource).not.toContain("<SidebarListItem");
     // The footer's overlay placement opens its menus upward.
-    expect(accountMenuSource).toContain('<DropdownMenuContent size="wide">');
     expect(workbenchSidebarSource).toContain('<OverlaySideProvider side="top" align="start">');
   });
 

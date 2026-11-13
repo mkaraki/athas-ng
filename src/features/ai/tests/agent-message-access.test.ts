@@ -13,9 +13,9 @@ describe("agent message access", () => {
     expect(getAgentMessageAccess("custom", true)).toEqual({ accepted: true });
   });
 
-  it("asks to sign in for Athas models and for a key for the user's own providers", () => {
+  it("explains unavailable Athas models and missing provider keys", () => {
     expect(getAgentMessageAccess("custom", false, "athas").error).toBe(
-      "Sign in to Athas to use Athas models.",
+      "Choose another model in AI settings. Athas accounts are unavailable.",
     );
     expect(getAgentMessageAccess("custom", false, "openai").error).toBe(
       "Add your OpenAI API key in Settings to use OpenAI models.",
